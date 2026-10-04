@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DCC Information Hub</title>
+<style>
+  :root {
+    --navy: #080b1c;
+    --navy-2: #0e1229;
+    --navy-3: #151a36;
+    --purple: #7667d9;
+    --purple-light: #9b8df0;
+    --white: #ffffff;
+    --muted: #a8aec7;
+    --line: rgba(255,255,255,.10);
+    --glass: rgba(255,255,255,.055);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { margin: 0; min-height: 100%; }
+
+  body {
+    font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--white);
+    background:
+      radial-gradient(circle at 82% 10%, rgba(118,103,217,.18), transparent 32%),
+      radial-gradient(circle at 10% 80%, rgba(74,86,170,.12), transparent 28%),
+      linear-gradient(145deg, #050713 0%, var(--navy) 48%, #0b1024 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,.7), transparent 85%);
+  }
+
+  .page {
+    width: min(1180px, calc(100% - 40px));
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    height: 88px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 2;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    text-decoration: none;
+    color: white;
+  }
+
+  .brand img {
+    width: 45px;
+    height: 45px;
+    object-fit: contain;
+  }
+
+  .brand-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .brand-name {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+
+  .brand-sub {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #e8e9f2;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .prototype {
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,.045);
+    color: var(--muted);
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 10px;
+    letter-spacing: .08em;
+  }
+
+  main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: .82fr 1.18fr;
+    gap: 52px;
+    align-items: center;
+    padding: 34px 0 58px;
+  }
+
+  .intro {
+    max-width: 470px;
+    padding-bottom: 28px;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #c6c1ff;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 26px;
+    height: 1px;
+    background: var(--purple-light);
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(42px, 5vw, 68px);
+    line-height: .98;
+    letter-spacing: -.045em;
+    font-weight: 750;
+  }
+
+  .accent { color: #a99eff; }
+
+  .intro p {
+    color: #b9bdd0;
+    font-size: 16px;
+    line-height: 1.7;
+    margin: 24px 0 0;
+    max-width: 430px;
+  }
+
+  .topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 25px;
+  }
+
+  .topic {
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,.035);
+    color: #d8dae5;
+    border-radius: 999px;
+    padding: 9px 13px;
+    font-size: 12px;
+  }
+
+  .chat-shell {
+    width: 100%;
+    max-width: 640px;
+    justify-self: end;
+    background: rgba(11,15,36,.84);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 26px;
+    box-shadow: 0 30px 90px rgba(0,0,0,.42), 0 0 0 1px rgba(118,103,217,.04);
+    backdrop-filter: blur(20px);
+    overflow: hidden;
+  }
+
+  .chat-head {
+    min-height: 70px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+    background: rgba(255,255,255,.025);
+  }
+
+  .bot-id {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+  }
+
+  .bot-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(145deg, #8d7ef0, #5f53b7);
+    box-shadow: 0 8px 20px rgba(101,88,202,.25);
+    font-weight: 900;
+    font-size: 15px;
+  }
+
+  .bot-name {
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .bot-status {
+    margin-top: 3px;
+    color: #9298b2;
+    font-size: 10px;
+  }
+
+  .online {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #72d6a3;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+
+  .chat-body {
+    min-height: 410px;
+    padding: 25px 22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 17px;
+  }
+
+  .welcome {
+    align-self: flex-start;
+    max-width: 92%;
+  }
+
+  .welcome-label {
+    color: #888ea8;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin: 0 0 7px 5px;
+  }
+
+  .message {
+    background: #171c38;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 17px 17px 17px 5px;
+    padding: 16px 17px;
+    color: #e5e7ef;
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  .message strong { color: white; }
+
+  .quick-start {
+    margin-top: 13px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .quick {
+    text-align: left;
+    border: 1px solid rgba(255,255,255,.09);
+    background: rgba(255,255,255,.025);
+    color: #cfd2df;
+    border-radius: 12px;
+    padding: 11px 12px;
+    font-size: 11px;
+  }
+
+  .quick span {
+    display: block;
+    color: #8f87e7;
+    font-size: 13px;
+    margin-bottom: 3px;
+  }
+
+  .input-wrap {
+    padding: 15px;
+    border-top: 1px solid var(--line);
+    background: rgba(3,5,15,.35);
+  }
+
+  .input-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 8px 7px 16px;
+    background: #151a34;
+    border: 1px solid rgba(255,255,255,.11);
+    border-radius: 16px;
+  }
+
+  .input-box input {
+    min-width: 0;
+    flex: 1;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: white;
+    font: inherit;
+    font-size: 13px;
+  }
+
+  .input-box input::placeholder { color: #707690; }
+
+  .send {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    border: 0;
+    border-radius: 12px;
+    background: linear-gradient(145deg, #8879eb, #6154bd);
+    color: white;
+    display: grid;
+    place-items: center;
+    font-size: 17px;
+  }
+
+  .privacy {
+    text-align: center;
+    color: #646b86;
+    font-size: 9px;
+    margin: 9px 0 1px;
+  }
+
+  footer {
+    padding: 0 0 25px;
+    color: #60677e;
+    font-size: 10px;
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+  }
+
+  @media (max-width: 860px) {
+    .page { width: min(100% - 28px, 650px); }
+    header { height: 74px; }
+    .header-title { display: none; }
+    main {
+      grid-template-columns: 1fr;
+      gap: 28px;
+      padding-top: 25px;
+    }
+    .intro {
+      max-width: 620px;
+      padding-bottom: 0;
+    }
+    h1 { font-size: clamp(40px, 12vw, 58px); }
+    .intro p { font-size: 14px; }
+    .chat-shell {
+      justify-self: stretch;
+      max-width: none;
+    }
+    .chat-body { min-height: 350px; }
+    footer { padding-top: 8px; }
+  }
+
+  @media (max-width: 480px) {
+    .page { width: calc(100% - 22px); }
+    .brand img { width: 38px; height: 38px; }
+    .brand-copy { display: none; }
+    main { padding-top: 16px; padding-bottom: 32px; }
+    .eyebrow { margin-bottom: 14px; }
+    h1 { font-size: 42px; }
+    .topics { display: none; }
+    .chat-shell { border-radius: 20px; }
+    .chat-head { padding: 13px 15px; }
+    .chat-body { min-height: 340px; padding: 20px 15px; }
+    .quick-start { grid-template-columns: 1fr; }
+    .input-wrap { padding: 11px; }
+    footer { flex-direction: column; }
+  }
+</style>
+
+  <style>
+    .chat-body { max-height: 560px; overflow-y: auto; justify-content: flex-start; }
+    .hub-entry { margin-top: 17px; max-width: 92%; }
+    .user-entry { align-self: flex-end; max-width: 78%; }
+    .user-message { background: linear-gradient(145deg,#7667d9,#5e53b7); border-radius:17px 17px 5px 17px; padding:12px 15px; font-size:13px; line-height:1.5; }
+    .hub-menu { display:grid; gap:8px; margin-top:12px; }
+    .hub-menu-title { color:#8e95ae; font-size:10px; text-transform:uppercase; letter-spacing:.1em; margin-bottom:2px; }
+    .hub-option { width:100%; text-align:left; display:flex; align-items:center; gap:10px; border:1px solid rgba(255,255,255,.09); background:rgba(255,255,255,.035); color:#dfe1eb; border-radius:12px; padding:11px 12px; font:inherit; font-size:12px; cursor:pointer; transition:.16s ease; }
+    .hub-option:hover,.hub-option:focus-visible { background:rgba(118,103,217,.16); border-color:rgba(155,141,240,.42); outline:none; transform:translateY(-1px); }
+    .hub-number { width:23px; height:23px; border-radius:8px; display:grid; place-items:center; flex:0 0 23px; background:rgba(118,103,217,.18); color:#b6adff; font-size:10px; font-weight:800; }
+    .hub-utility { display:flex; gap:7px; flex-wrap:wrap; margin-top:12px; }
+    .hub-utility-btn { border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.025); color:#8f96ad; border-radius:999px; padding:7px 10px; font-size:10px; cursor:pointer; }
+    .hub-utility-btn:hover,.hub-utility-btn:focus-visible { color:#fff; border-color:rgba(155,141,240,.35); outline:none; }
+    .md-result { margin-top:9px; color:#c8ccda; }
+    .md-result ul,.md-result ol { margin:8px 0 0; padding-left:19px; }
+    .md-result li { margin:5px 0; }
+    .link-row { margin-top:12px; }
+    .hub-link { display:inline-flex; align-items:center; gap:6px; color:#c2baff; text-decoration:none; border:1px solid rgba(155,141,240,.28); background:rgba(118,103,217,.11); border-radius:10px; padding:9px 11px; font-weight:700; font-size:11px; }
+    .hub-link:hover,.hub-link:focus-visible { background:rgba(118,103,217,.2); text-decoration:none; outline:2px solid rgba(155,141,240,.35); outline-offset:2px; }
+    .notice { margin-top:11px; padding:10px 11px; border-left:2px solid #7667d9; background:rgba(118,103,217,.06); color:#989fb8; font-size:14px; line-height:1.5; }
+    .muted-note { color:#7f869f; font-size:10px; }
+    .quick { cursor:pointer; }
+    .quick:focus-visible { outline:2px solid rgba(155,141,240,.6); outline-offset:2px; }
+  /* Main-menu visual treatment: matches the reference design while leaving all functionality unchanged. */
+  .hub-menu.dcc-main-menu {
+    gap: 6px;
+    margin-top: 14px;
+  }
+
+  .hub-menu.dcc-main-menu .hub-option {
+    position: relative;
+    min-height: 64px;
+    padding: 10px 42px 10px 76px;
+    border-radius: 15px;
+    background: linear-gradient(135deg, rgba(118,103,217,.14), rgba(255,255,255,.035));
+    border-color: rgba(255,255,255,.07);
+    gap: 0;
+    align-items: flex-start;
+  }
+
+  .hub-menu.dcc-main-menu .hub-option::before {
+    content: "";
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    width: 36px;
+    height: 36px;
+    transform: translateY(-50%);
+    border-radius: 11px;
+    background-color: rgba(118,103,217,.16);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 21px 21px;
+    box-shadow: inset 0 0 0 1px rgba(155,141,240,.08);
+  }
+
+  /* Make the welcome card exactly the same width as the main-menu bars. */
+  .welcome {
+    align-self: stretch;
+    width: 100%;
+    max-width: none;
+  }
+
+  .welcome .message {
+    width: 100%;
+  }
+
+  /* Main-menu bars do not use trailing arrows. */
+  .hub-menu.dcc-main-menu .hub-option::after {
+    display: none;
+  }
+
+  /* Keep every number and title aligned consistently across all options. */
+  .hub-menu.dcc-main-menu .hub-number {
+    width: 18px;
+    height: auto;
+    flex: 0 0 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-right: 6px;
+    margin-top: 1px;
+    border-radius: 0;
+    background: transparent;
+    color: #f0f1f6;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.25;
+  }
+
+  .hub-menu.dcc-main-menu .hub-number::after {
+    content: ".";
+  }
+
+  .hub-menu.dcc-main-menu .hub-option > span:last-child {
+    display: block;
+    min-width: 0;
+    color: #f0f1f6;
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.25;
+    padding-right: 2px;
+  }
+
+  .hub-menu.dcc-main-menu .hub-option > span:last-child::after {
+    display: block;
+    margin-top: 4px;
+    color: #aeb4cb;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  .hub-menu.dcc-main-menu .hub-option:nth-child(1)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9adff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M12 7v5l3.2 2'/%3E%3C/svg%3E");
+  }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(2)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9adff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='5' width='16' height='15' rx='2'/%3E%3Cpath d='M8 3v4M16 3v4M4 9h16M8 13h.01M12 13h.01M16 13h.01M8 16h.01M12 16h.01'/%3E%3C/svg%3E");
+  }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(3)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9adff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='8' r='3'/%3E%3Ccircle cx='17' cy='10' r='2.5'/%3E%3Cpath d='M3.5 19c.6-3.1 2.6-5 5.5-5s4.9 1.9 5.5 5M14 15.5c2.5-.2 4.7 1 5.5 3.5'/%3E%3C/svg%3E");
+  }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(4)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9adff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 3.5h8l4 4V20.5H6z'/%3E%3Cpath d='M14 3.5v5h4M9 13h6M9 16h6'/%3E%3C/svg%3E");
+  }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(5)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9adff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z'/%3E%3Ccircle cx='12' cy='9' r='2.3'/%3E%3C/svg%3E");
+  }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(6)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9adff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 5.5h14a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H11l-4.5 3v-3H5a3 3 0 0 1-3-3v-6a3 3 0 0 1 3-3z'/%3E%3Cpath d='M7 11.5h10'/%3E%3C/svg%3E");
+  }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(7)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9adff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='m10 8.5 5.5 3.5-5.5 3.5z'/%3E%3C/svg%3E");
+  }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(8)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9adff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M12 10v6M12 7.2h.01'/%3E%3C/svg%3E");
+  }
+
+  .hub-menu.dcc-main-menu .hub-option:nth-child(1) > span:last-child::after { content: "Service times, locations, first-timer information and more"; }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(2) > span:last-child::after { content: "Upcoming events and event information"; }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(3) > span:last-child::after { content: "Messages, videos and other resources"; }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(4) > span:last-child::after { content: "Access and learn about DCC forms"; }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(5) > span:last-child::after { content: "Giving information and support"; }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(6) > span:last-child::after { content: "Information about DCC pastors and ministers"; }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(7) > span:last-child::after { content: "Schools and other DCC resources"; }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(8) > span:last-child::after { content: "Get in touch with the relevant team"; }
+
+  @media (max-width: 480px) {
+    .hub-menu.dcc-main-menu .hub-option { min-height: 60px; padding-left: 67px; }
+    .hub-menu.dcc-main-menu .hub-option::before { left: 10px; width: 34px; height: 34px; }
+    .hub-menu.dcc-main-menu .hub-option > span:last-child { font-size: 12px; }
+    .hub-menu.dcc-main-menu .hub-option > span:last-child::after { font-size: 10px; }
+  }
+
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <a class="brand" href="#" aria-label="David's Christian Centre">
+        <img src="data:image/webp;base64,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" alt="DCC logo">
+        <span class="brand-copy">
+          <span class="brand-name">David's Christian Centre</span>
+          <span class="brand-sub">Information Hub</span>
+        </span>
+      </a>
+      <div class="header-title">
+        <span class="prototype">Prototype</span>
+        Information Hub
+      </div>
+    </header>
+
+    <main>
+      <section class="intro">
+        <div class="eyebrow">DCC Information Hub</div>
+        <h1>Ask. <span class="accent">Find.</span><br>Connect.</h1>
+        <p>
+          Welcome to the DCC Information Hub. Ask a question about services,
+          events, ministries, forms, locations or anything else you need to know.
+        </p>
+
+        <div class="topics" aria-label="Example topics">
+          <span class="topic">Service times</span>
+          <span class="topic">Events</span>
+          <span class="topic">Ministries</span>
+          <span class="topic">Forms</span>
+          <span class="topic">Locations</span>
+        </div>
+      </section>
+
+      <section class="chat-shell" aria-label="Information Hub chatbot">
+        <div class="chat-head">
+          <div class="bot-id">
+            <div class="bot-avatar">D</div>
+            <div>
+              <div class="bot-name">DCC Information Hub</div>
+              <div class="bot-status"><span class="online"></span>Starting…</div>
+            </div>
+          </div>
+          <div style="color:#777e99;font-size:18px;">•••</div>
+        </div>
+
+        <div class="chat-body">
+          <div class="welcome">
+            <div class="welcome-label">Information Hub</div>
+            <div class="message">
+              <strong>Hello 👋</strong><br>
+              Welcome to the DCC Information Hub. What would you like to know?
+              <div class="quick-start">
+                <div class="quick"><span>◷</span>When are the services?</div>
+                <div class="quick"><span>✦</span>What events are coming up?</div>
+                <div class="quick"><span>＋</span>Tell me about a ministry</div>
+                <div class="quick"><span>↗</span>Where can I find a form?</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-wrap">
+          <div class="input-box">
+            <input type="text" placeholder="Ask a question about DCC..." aria-label="Ask a question">
+            <button class="send" aria-label="Send question">↑</button>
+          </div>
+          <div class="privacy">Information Hub prototype · Responses will appear here</div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>David's Christian Centre</span>
+      <span>Information Hub · Prototype</span>
+    </footer>
+  </div>
+<script src="dcc-information-hub.js?v=20260926-4"></script>
+<script>
+(function () {
+  function markMainMenu() {
+    document.querySelectorAll('.hub-menu').forEach(function (menu) {
+      var first = menu.querySelector('.hub-option > span:last-child');
+      if (first && first.textContent.trim() === 'Church Information / Services') {
+        menu.classList.add('dcc-main-menu');
+      }
+    });
+  }
+
+  markMainMenu();
+  var observer = new MutationObserver(markMainMenu);
+  observer.observe(document.querySelector('.chat-body') || document.body, { childList: true, subtree: true });
+})();
+</script>
+</body>
+</html>
