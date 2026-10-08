@@ -676,6 +676,33 @@ function extractDeadlineNote(text) {
 
   addUtilityButtons();
 }
+
+  function careerPrep2026() {
+  addBot(
+    '<strong>Career Prep 2026</strong>' +
+    '<div class="md-result">' +
+    '<ol>' +
+    '<li><strong>Theme:</strong> Workplace Evolution</li>' +
+    '<li><strong>5-Day Virtual Training:</strong> 2–6 November, Monday–Friday, 9:00 AM–3:00 PM daily, live via Zoom</li>' +
+    '<li><strong>Career Prep Conference:</strong> Saturday, 7 November at 9:00 AM at DCC Mainland</li>' +
+    '<li><strong>At the Conference:</strong> Keynote speakers, networking session, panel session, certificates, 90-Day Career Action Plan</li>' +
+    '<li><strong>Training Tracks:</strong> Digital Marketing, Business Analysis, Content Creation, Project Management, Data Analytics, Cybersecurity</li>' +
+    '</ol>' +
+    '</div>'
+  );
+
+  addMenu([
+    {
+      label: 'Register',
+      action: () => window.open(
+        'https://luma.com/careerprep2026',
+        '_blank'
+      )
+    }
+  ]);
+
+  addUtilityButtons();
+}
   
   function parseDateFromText(text) {
     const m = text.match(/(?:Date|Dates):\*?\*?\s*(?:[A-Za-z]+\s+)?(\d{1,2})[\s–-]+(?:\d{1,2}\s+)?([A-Za-z]+)\s+(\d{4})/i) ||
