@@ -608,11 +608,31 @@ function extractDeadlineNote(text) {
     addMenu([
       {label:'Pastors', action:() => rosterView('pastors')},
       {label:'Ministers', action:() => rosterView('ministers')},
-      {label: 'Workforce Leaders', action:() => leadershipAssignments()}
+      {label: 'Workforce Leaders', action: () => workforceLeadersMenu()}
     ]);
     addUtilityButtons();
   }
 
+  function workforceLeadersMenu() {
+  addBot(
+    '<strong>Workforce Leaders</strong><br>' +
+    'Which branch would you like to explore?'
+  );
+
+  addMenu([
+    {
+      label: 'DCC Mainland Workforce Leaders',
+      action: () => workforceDepartments('Mainland')
+    },
+    {
+      label: 'DCC Island Workforce Leaders',
+      action: () => workforceDepartments('Island')
+    }
+  ]);
+
+  addUtilityButtons();
+}
+  
   function rosterView(kind, count = null) {
     const roster = parseRoster(kind);
     if (!roster.length) return missing();
