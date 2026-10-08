@@ -301,7 +301,6 @@ state.currentContext = null;
     addMenu([
       {label:'Mainland — Victory Dome', action:() => branchDetails('Mainland — Victory Dome')},
       {label:'Island — DCC Lekki', action:() => branchDetails('Island — DCC Lekki')},
-      {label:'First-timer information', action:() => formDetails('First Timers')},
       {label:'About DCC', action:() => aboutDcc()}
     ]);
     addUtilityButtons();
