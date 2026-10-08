@@ -337,11 +337,23 @@ state.currentContext = null;
     html += `<div class="md-result"><strong>Service Times</strong><br>`;
 
     centre.services.forEach(service => {
-      let time = service.start_time || '';
+      const formatServiceTime = (timeValue) => {
+  if (!timeValue) return '';
 
-      if (service.end_time) {
-        time += ` – ${service.end_time}`;
-      }
+  const [hour, minute] = timeValue.split(':').map(Number);
+  const period = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour % 12 || 12;
+
+  return minute === 0
+    ? `${displayHour} ${period}`
+    : `${displayHour}:${String(minute).padStart(2, '0')} ${period}`;
+};
+
+let time = formatServiceTime(service.start_time);
+
+if (service.end_time) {
+  time += ` – ${formatServiceTime(service.end_time)}`;
+}
 
       html += `${escapeHtml(service.day)} — ${escapeHtml(service.label)}: ${escapeHtml(time)}<br>`;
     });
