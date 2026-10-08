@@ -608,7 +608,7 @@ function extractDeadlineNote(text) {
     addMenu([
       {label:'Pastors', action:() => rosterView('pastors')},
       {label:'Ministers', action:() => rosterView('ministers')},
-      {label:'Department / leadership information', action:() => leadershipAssignments()}
+      {label: 'Workforce Leaders', action:() => leadershipAssignments()}
     ]);
     addUtilityButtons();
   }
