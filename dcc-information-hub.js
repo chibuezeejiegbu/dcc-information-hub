@@ -621,16 +621,62 @@ function extractDeadlineNote(text) {
   }
 
   function eventsMenu() {
-    const events = getUpcomingEvents();
-    if (!events.length) {
-      addBot(`I don't have a verified upcoming event in the local calendar right now.<br><br>${link('View the official DCC Events page', CONFIG.eventsUrl)}`);
-      addUtilityButtons(); return;
-    }
-    addBot('<strong>Here are the currently scheduled upcoming DCC events in the supplied calendar.</strong><br>Which event would you like to know more about?');
-    addMenu(events.map(e => ({label:e.title, action:() => eventDetails(e)})));
-    addUtilityButtons();
-  }
+  const events = getUpcomingEvents();
 
+  const fixedEvents = [
+    {
+      label: 'All Sundays in October 2026',
+      action: () => octoberSundayServices()
+    },
+    {
+      label: 'All Mid-Week Services in October 2026',
+      action: () => octoberMidweekServices()
+    },
+    {
+      label: 'Career Prep 2026',
+      action: () => careerPrep2026()
+    }
+  ];
+
+  const databaseEvents = events.map(e => ({
+    label: e.title,
+    action: () => eventDetails(e)
+  }));
+
+  addBot(
+    '<strong>Here are the currently scheduled upcoming DCC events.</strong><br>' +
+    'Which event would you like to know more about?'
+  );
+
+  addMenu([...fixedEvents, ...databaseEvents]);
+
+  addUtilityButtons();
+}
+
+  function octoberSundayServices() {
+  addBot(
+    '<strong>All Sundays in October 2026</strong>' +
+    '<div class="md-result">' +
+    '<strong>Topic:</strong> Kingdom Marriage<br><br>' +
+    'The topic for all Sunday sermons in October 2026 is <strong>Kingdom Marriage</strong> for both the Mainland and Island branches.' +
+    '</div>'
+  );
+
+  addUtilityButtons();
+}
+
+  function octoberMidweekServices() {
+  addBot(
+    '<strong>All Mid-Week Services in October 2026</strong>' +
+    '<div class="md-result">' +
+    '<strong>Topic:</strong> The 4 Dimensions of Love<br><br>' +
+    'The topic for all Mid-Week Services in October 2026 is <strong>The 4 Dimensions of Love</strong> for both the Mainland and Island branches.' +
+    '</div>'
+  );
+
+  addUtilityButtons();
+}
+  
   function parseDateFromText(text) {
     const m = text.match(/(?:Date|Dates):\*?\*?\s*(?:[A-Za-z]+\s+)?(\d{1,2})[\s–-]+(?:\d{1,2}\s+)?([A-Za-z]+)\s+(\d{4})/i) ||
               text.match(/(?:Date|Dates):\*?\*?\s*(?:[A-Za-z]+,?\s+)?(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/i);
