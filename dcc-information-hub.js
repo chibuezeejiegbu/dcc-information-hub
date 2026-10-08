@@ -252,7 +252,7 @@ async function recordContactEvent(entryPoint, context = null) {
     {label:'Sermons & Media', action:() => sermonsMenu()},
     {label:'Forms & Registration', action:() => formsMenu()},
     {label:'Giving', action:() => giving()},
-    {label:'Leadership / Pastors & Ministers', action:() => leadershipMenu()},
+    {label:'Pastors & Ministers / Workforce Leaders', action:() => leadershipMenu()},
     {label:'DCC Schools / Resources', action:() => resourcesMenu()},
     {
   label:'Contact the Team',
@@ -588,7 +588,7 @@ function extractDeadlineNote(text) {
     const section = faqSection('Giving');
     if (!section) return missing();
     const text = sectionText(section);
-    addBot(`<strong>Giving</strong><div class="md-result">${formatLines(text)}</div><div class="notice">Because bank details can change, please use the official Giving page before transferring money.</div><div class="link-row">${link('Open official Giving page','https://www.davidschristiancentre.org/give')}</div>`);
+    addBot(`<strong>Giving</strong><div class="md-result">${formatLines(text)}</div><div class="notice">To make sure everything goes smoothly, please check our official giving page for our details before making a transfer.</div><div class="link-row">${link('Open official Giving page','https://www.davidschristiancentre.org/give')}</div>`);
     addUtilityButtons();
   }
 
@@ -785,7 +785,7 @@ function extractDeadlineNote(text) {
     addBot('<strong>Which would you like to access?</strong>');
     addMenu([
       {label:'Sunday Sermon', action:() => sermonLocation('Sunday Sermon')},
-      {label:'Midweek Sermon', action:() => sermonLocation('Midweek Sermon')}
+      {label:'Mid-Week Sermon', action:() => sermonLocation('Mid-Week Sermon')}
     ]);
     addUtilityButtons();
   }
