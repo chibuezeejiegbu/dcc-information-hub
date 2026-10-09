@@ -54,9 +54,8 @@ member.
 9. Minister Austin Zelma Omoike
 10. Minister Ejiro Ogumor
 11. Minister Kelvin Ogumor
-12. Minister Ochanya
-13. Minister Udeme Usoro
-14. Minister Samuel Onyeani
+12. Minister Udeme Usoro
+13. Minister Samuel Onyeani
 
 ### Roster usage rules
 
