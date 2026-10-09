@@ -269,7 +269,6 @@ async function recordContactEvent(entryPoint, context = null) {
     state.stack = [];
 state.currentContext = null;
     state.history = [];
-    addBot('<strong>Hello 👋</strong><br>Welcome to the DCC Information Hub. What would you like to know?');
     showMainMenu();
   }
 
@@ -798,15 +797,11 @@ function extractDeadlineNote(text) {
     '</div>'
   );
 
-  addMenu([
-    {
-      label: 'Register',
-      action: () => window.open(
-        'https://luma.com/careerprep2026',
-        '_blank'
-      )
-    }
-  ]);
+  addBot(
+    '<div class="link-row">' +
+    link('Register', 'https://luma.com/careerprep2026') +
+    '</div>'
+  );
 
   addUtilityButtons();
 }
@@ -901,13 +896,13 @@ function extractDeadlineNote(text) {
   }
 
   function resourcesMenu() {
-    addBot('<strong>DCC Schools & Resources</strong><br>Choose a resource.');
+    addBot('<strong>DCC Schools / Resources</strong><br>Choose a resource.');
     addMenu([
-      {label:'Audio Messages', action:() => resourceLink('Audio Messages','https://www.davidschristiancentre.org/resources/audio-messages')},
-      {label:'Podcast', action:() => resourceLink('Podcast','https://www.davidschristiancentre.org/resources/podcasts')},
-      {label:'Devotional', action:() => resourceLink('Devotional','https://www.davidschristiancentre.org/resources/devotional')},
-      {label:'DCC Online App', action:() => resourceLink('DCC Online App','https://www.davidschristiancentre.org/resources/download-app')},
-      {label:'DCC Schools website', action:() => resourceLink('DCC Schools website','https://schools.davidschristiancentre.org/')}
+      {label:'Audio Messages', action:() => resourceLink('Audio Messages','Click here to listen to audio messages and ministrations from our pastors, ministers, and guest ministers.','https://www.davidschristiancentre.org/resources/audio-messages')},
+      {label:'Podcast', action:() => resourceLink('Podcast','Click here to listen to our podcasts.','https://www.davidschristiancentre.org/resources/podcasts')},
+      {label:'Devotional', action:() => resourceLink('Devotional','Click here to listen to our devotionals.','https://www.davidschristiancentre.org/resources/devotional')},
+      {label:'DCC Online App', action:() => resourceLink('DCC Online App','Click here to download the DCC Online mobile application. Available on Google Play and the Apple App Store.','https://www.davidschristiancentre.org/resources/download-app')},
+      {label:'DCC Schools Website', action:() => resourceLink('DCC Schools Website','Click here to visit the DCC Schools Website.','https://schools.davidschristiancentre.org/')}
     ]);
     addUtilityButtons();
   }
@@ -919,8 +914,13 @@ function extractDeadlineNote(text) {
     addUtilityButtons();
   }
 
-  function resourceLink(title, url) {
-    addBot(`<strong>${escapeHtml(title)}</strong><br>${link('Open resource', url)}`); addUtilityButtons();
+  function resourceLink(title, description, url) {
+    addBot(
+      `<strong>${escapeHtml(title)}</strong>` +
+      `<div class="md-result">${escapeHtml(description)}</div>` +
+      `<div class="link-row">${link(title, url)}</div>`
+    );
+    addUtilityButtons();
   }
 
   function help(fromMainMenu = false) {
