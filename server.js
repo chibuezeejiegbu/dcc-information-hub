@@ -32,7 +32,7 @@ app.get('/api/test', async (req, res) => {
     try {
         await client.connect();
 
-        const db = client.db('dcc_information_hub');
+        const db = client.db(process.env.MONGODB_DATABASE || 'dcc_information_hub');
 
         const collections = await db.listCollections().toArray();
 
@@ -56,7 +56,7 @@ app.get('/api/events', async (req, res) => {
     try {
         await client.connect();
 
-        const db = client.db('dcc_information_hub');
+        const db = client.db(process.env.MONGODB_DATABASE || 'dcc_information_hub');
 
         const events = await db
             .collection('events')
@@ -82,7 +82,7 @@ app.get('/api/worship-centres', async (req, res) => {
     try {
         await client.connect();
 
-        const db = client.db('dcc_information_hub');
+        const db = client.db(process.env.MONGODB_DATABASE || 'dcc_information_hub');
 
         const worshipCentres = await db
             .collection('worship_centres')
@@ -108,7 +108,7 @@ app.get('/api/forms', async (req, res) => {
     try {
         await client.connect();
 
-        const db = client.db('dcc_information_hub');
+        const db = client.db(process.env.MONGODB_DATABASE || 'dcc_information_hub');
 
         const forms = await db
             .collection('forms')
@@ -134,7 +134,7 @@ app.get('/api/giving-accounts', async (req, res) => {
     try {
         await client.connect();
 
-        const db = client.db('dcc_information_hub');
+        const db = client.db(process.env.MONGODB_DATABASE || 'dcc_information_hub');
 
         const givingAccounts = await db
             .collection('giving_accounts')
@@ -160,7 +160,7 @@ app.get('/api/people', async (req, res) => {
     try {
         await client.connect();
 
-        const db = client.db('dcc_information_hub');
+        const db = client.db(process.env.MONGODB_DATABASE || 'dcc_information_hub');
 
         const people = await db
             .collection('people')
@@ -186,7 +186,7 @@ app.get('/api/leadership-assignments', async (req, res) => {
     try {
         await client.connect();
 
-        const db = client.db('dcc_information_hub');
+        const db = client.db(process.env.MONGODB_DATABASE || 'dcc_information_hub');
 
         const assignments = await db
             .collection('leadership_assignments')
@@ -212,7 +212,7 @@ app.get('/api/departments', async (req, res) => {
     try {
         await client.connect();
 
-        const db = client.db('dcc_information_hub');
+        const db = client.db(process.env.MONGODB_DATABASE || 'dcc_information_hub');
 
         const departments = await db
             .collection('departments')
@@ -238,7 +238,7 @@ app.get('/api/resources', async (req, res) => {
     try {
         await client.connect();
 
-        const db = client.db('dcc_information_hub');
+        const db = client.db(process.env.MONGODB_DATABASE || 'dcc_information_hub');
 
         const resources = await db
             .collection('resources')
@@ -264,7 +264,7 @@ app.get('/api/schools', async (req, res) => {
     try {
         await client.connect();
 
-        const db = client.db('dcc_information_hub');
+        const db = client.db(process.env.MONGODB_DATABASE || 'dcc_information_hub');
 
         const schools = await db
             .collection('schools')
@@ -290,7 +290,7 @@ app.get('/api/long-form-content', async (req, res) => {
     try {
         await client.connect();
 
-        const db = client.db('dcc_information_hub');
+        const db = client.db(process.env.MONGODB_DATABASE || 'dcc_information_hub');
 
         const content = await db
             .collection('long_form_content')
@@ -316,7 +316,7 @@ app.get('/api/external-links', async (req, res) => {
     try {
         await client.connect();
 
-        const db = client.db('dcc_information_hub');
+        const db = client.db(process.env.MONGODB_DATABASE || 'dcc_information_hub');
 
         const links = await db
             .collection('external_links')
@@ -342,7 +342,7 @@ app.post('/api/contact-events', async (req, res) => {
     try {
         await client.connect();
 
-        const db = client.db('dcc_information_hub');
+        const db = client.db(process.env.MONGODB_DATABASE || 'dcc_information_hub');
 
         const contactEvent = {
             session_id: req.body.session_id || null,
@@ -376,7 +376,7 @@ app.post('/api/contact-requests', async (req, res) => {
     try {
         await client.connect();
 
-        const db = client.db('dcc_information_hub');
+        const db = client.db(process.env.MONGODB_DATABASE || 'dcc_information_hub');
 
         const name = String(req.body.name || '').trim();
         const whatsappNumber = String(req.body.whatsapp_number || '').trim();
