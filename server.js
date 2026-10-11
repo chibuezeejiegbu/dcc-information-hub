@@ -5,8 +5,19 @@ const { MongoClient } = require('mongodb');
 const session = require('express-session');
 const { MongoStore } = require('connect-mongo');
 const crypto = require('crypto');
+const { rateLimit } = require('express-rate-limit');
 
 const app = express();
+const adminLoginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 5,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    message: {
+        success: false,
+        message: 'Too many attempts. Please try again in 15 minutes.'
+    }
+});
 const PORT = process.env.PORT || 3000;
 
 const client = new MongoClient(process.env.MONGODB_URI);
@@ -492,7 +503,7 @@ app.post('/api/contact-requests', async (req, res) => {
     }
 });
 
-app.post('/api/admin/setup', async (req, res) => {
+app.post('/api/admin/setup', adminLoginLimiter, async (req, res) => {
     try {
         const setupSecret = process.env.ADMIN_SETUP_SECRET;
         const suppliedSecret = req.body?.setupSecret;
