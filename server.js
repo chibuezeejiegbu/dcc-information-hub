@@ -11,6 +11,24 @@ const PORT = process.env.PORT || 3000;
 const client = new MongoClient(process.env.MONGODB_URI);
 
 app.use(express.json());
+app.use(session({
+    name: 'dcc_admin_sid',
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+        client,
+        dbName: process.env.MONGODB_DB_NAME,
+        collectionName: 'admin_sessions',
+        ttl: 60 * 60 * 8
+    }),
+    cookie: {
+        httpOnly: true,
+        secure: process.env.RENDER === 'true',
+        sameSite: 'lax',
+        maxAge: 1000 * 60 * 60 * 8
+    }
+}));
 
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
