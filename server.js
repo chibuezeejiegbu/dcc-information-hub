@@ -4,6 +4,7 @@ const express = require('express');
 const { MongoClient } = require('mongodb');
 const session = require('express-session');
 const { MongoStore } = require('connect-mongo');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -487,6 +488,100 @@ app.post('/api/contact-requests', async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Could not record contact request.'
+        });
+    }
+});
+
+app.post('/api/admin/setup', async (req, res) => {
+    try {
+        const setupSecret = process.env.ADMIN_SETUP_SECRET;
+        const suppliedSecret = req.body?.setupSecret;
+
+        if (!setupSecret) {
+            return res.status(503).json({
+                success: false,
+                message: 'Admin setup is not configured.'
+            });
+        }
+
+        if (typeof suppliedSecret !== 'string') {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid setup authorization.'
+            });
+        }
+
+        const expected = Buffer.from(setupSecret, 'utf8');
+        const supplied = Buffer.from(suppliedSecret, 'utf8');
+
+        if (
+            expected.length !== supplied.length ||
+            !crypto.timingSafeEqual(expected, supplied)
+        ) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid setup authorization.'
+            });
+        }
+
+        const { username, password } = req.body;
+
+        if (
+            typeof username !== 'string' ||
+            !/^[a-zA-Z0-9._-]{3,40}$/.test(username) ||
+            typeof password !== 'string' ||
+            password.length < 14 ||
+            Buffer.byteLength(password, 'utf8') > 1024
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: 'Use a username of 3–40 letters, numbers, dots, underscores or hyphens, and a password of at least 14 characters.'
+            });
+        }
+
+        await client.connect();
+
+        const db = client.db(
+            process.env.MONGODB_DB_NAME || 'dcc_information_hub'
+        );
+
+        const admins = db.collection('admin_users');
+
+        const salt = crypto.randomBytes(16).toString('hex');
+
+        const passwordHash = await new Promise((resolve, reject) => {
+            crypto.scrypt(password, salt, 64, (error, key) => {
+                if (error) reject(error);
+                else resolve(key.toString('hex'));
+            });
+        });
+
+        await admins.insertOne({
+            _id: 'primary',
+            username: username.toLowerCase(),
+            passwordHash,
+            passwordSalt: salt,
+            createdAt: new Date()
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: 'Initial administrator created. You can now log in.'
+        });
+
+    } catch (error) {
+        if (error.code === 11000) {
+            return res.status(409).json({
+                success: false,
+                message: 'An administrator already exists. Setup is closed.'
+            });
+        }
+
+        console.error('Admin setup failed:', error.message);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Admin setup failed.'
         });
     }
 });
