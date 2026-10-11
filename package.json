@@ -1,10 +1,11 @@
 {
-  "name": "info-hub-html-bot---local-host",
+  "name": "dcc-information-hub",
   "version": "1.0.0",
-  "description": "This is the deterministic JavaScript/Markdown prototype specified in the DCC Information Hub build prompt.",
-  "main": "dcc-information-hub.js",
+  "description": "DCC Information Hub chatbot and admin CMS backend",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js",
+    "test": "node --check server.js"
   },
   "keywords": [],
   "author": "",
