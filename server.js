@@ -8,6 +8,8 @@ const crypto = require('crypto');
 const { rateLimit } = require('express-rate-limit');
 
 const app = express();
+app.set('trust proxy', 1);
+
 const adminLoginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     limit: 5,
@@ -21,6 +23,14 @@ const adminLoginLimiter = rateLimit({
 const PORT = process.env.PORT || 3000;
 
 const client = new MongoClient(process.env.MONGODB_URI);
+if (
+    !process.env.MONGODB_URI ||
+    !process.env.MONGODB_DB_NAME ||
+    !process.env.SESSION_SECRET ||
+    !process.env.ADMIN_SETUP_SECRET
+) {
+    throw new Error('Missing required database or session configuration.');
+}
 
 app.use(express.json());
 app.use(session({
@@ -42,23 +52,7 @@ app.use(session({
     }
 }));
 
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
-
-    next();
-});
-
 app.use(express.static(__dirname));
-
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
-
-    next();
-});
 
 app.get('/api/test', async (req, res) => {
     try {
@@ -595,6 +589,136 @@ app.post('/api/admin/setup', adminLoginLimiter, async (req, res) => {
             message: 'Admin setup failed.'
         });
     }
+});
+
+app.post('/api/admin/login', adminLoginLimiter, async (req, res) => {
+    try {
+        const { username, password } = req.body || {};
+
+        if (
+            typeof username !== 'string' ||
+            typeof password !== 'string' ||
+            username.length > 40 ||
+            password.length > 1024
+        ) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid username or password.'
+            });
+        }
+
+        await client.connect();
+
+        const db = client.db(
+            process.env.MONGODB_DB_NAME || 'dcc_information_hub'
+        );
+
+        const admin = await db.collection('admin_users').findOne({
+            _id: 'primary',
+            username: username.toLowerCase()
+        });
+
+        if (!admin) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid username or password.'
+            });
+        }
+
+        const passwordHash = await new Promise((resolve, reject) => {
+            crypto.scrypt(password, admin.passwordSalt, 64, (error, key) => {
+                if (error) reject(error);
+                else resolve(key);
+            });
+        });
+
+        const storedHash = Buffer.from(admin.passwordHash, 'hex');
+
+        if (
+            storedHash.length !== passwordHash.length ||
+            !crypto.timingSafeEqual(storedHash, passwordHash)
+        ) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid username or password.'
+            });
+        }
+
+        req.session.regenerate((error) => {
+            if (error) {
+                console.error('Session regeneration failed:', error.message);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Login could not be completed.'
+                });
+            }
+
+            req.session.adminId = 'primary';
+
+            req.session.save((saveError) => {
+                if (saveError) {
+                    console.error('Session save failed:', saveError.message);
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Login could not be completed.'
+                    });
+                }
+
+                return res.json({
+                    success: true,
+                    message: 'Login successful.'
+                });
+            });
+        });
+
+    } catch (error) {
+        console.error('Admin login failed:', error.message);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Login could not be completed.'
+        });
+    }
+});
+
+app.get('/api/admin/me', (req, res) => {
+    if (req.session?.adminId !== 'primary') {
+        return res.status(401).json({
+            success: false,
+            authenticated: false,
+            message: 'Not logged in.'
+        });
+    }
+
+    return res.json({
+        success: true,
+        authenticated: true
+    });
+});
+
+app.post('/api/admin/logout', (req, res) => {
+    req.session.destroy((error) => {
+        if (error) {
+            console.error('Admin logout failed:', error.message);
+
+            return res.status(500).json({
+                success: false,
+                message: 'Logout could not be completed.'
+            });
+        }
+
+        res.clearCookie('dcc_admin_sid', {
+            httpOnly: true,
+            secure: process.env.RENDER === 'true',
+            sameSite: 'lax',
+            path: '/'
+        });
+
+        return res.json({
+            success: true,
+            message: 'Logged out successfully.'
+        });
+    });
 });
 
 app.listen(PORT, () => {
