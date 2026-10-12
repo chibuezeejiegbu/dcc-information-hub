@@ -161,7 +161,7 @@
 
 async function recordContactEvent(entryPoint, context = null) {
   try {
-    const res = await fetch('https://dcc-information-hub.onrender.com/api/contact-events', {
+    const res = await fetch('/api/contact-events', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -1126,7 +1126,7 @@ async function submitContactRequest() {
   submitButton.textContent = 'Submitting...';
 
   try {
-    const res = await fetch('https://dcc-information-hub.onrender.com/api/contact-requests', {
+    const res = await fetch('/api/contact-requests', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -1237,7 +1237,7 @@ function tokenize(query) {
   }
 
 async function loadEventsFromApi() {
-  const res = await fetch('https://dcc-information-hub.onrender.com/api/events', {
+  const res = await fetch('/api/events', {
     cache: 'no-store'
   });
 
@@ -1259,7 +1259,7 @@ async function loadEventsFromApi() {
 }
 
 async function loadWorshipCentresFromApi() {
-  const res = await fetch('https://dcc-information-hub.onrender.com/api/worship-centres', {
+  const res = await fetch('/api/worship-centres', {
     cache: 'no-store'
   });
 
