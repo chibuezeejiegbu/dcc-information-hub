@@ -1,0 +1,246 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Admin Login | DCC Information Hub</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: #f3f5f8;
+            color: #202b3c;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            padding: 40px 32px;
+            background: #ffffff;
+            border: 1px solid #e5e9f0;
+            border-radius: 16px;
+            box-shadow: 0 12px 36px rgba(22, 34, 51, 0.08);
+        }
+
+        .brand-mark {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 58px;
+            height: 58px;
+            margin: 0 auto 22px;
+            border-radius: 14px;
+            background: #173b65;
+            color: #ffffff;
+            font-size: 23px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        h1 {
+            margin: 0;
+            text-align: center;
+            font-size: 25px;
+        }
+
+        .subtitle {
+            margin: 12px 0 30px;
+            color: #687386;
+            text-align: center;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        label {
+            display: block;
+            margin: 18px 0 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px 14px;
+            border: 1px solid #d5dce6;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #202b3c;
+            font-size: 15px;
+        }
+
+        input:focus {
+            outline: 2px solid #9bbce0;
+            border-color: #315e91;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 26px;
+            padding: 14px;
+            border: 0;
+            border-radius: 8px;
+            background: #173b65;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #214d7e;
+        }
+
+        button:disabled {
+            cursor: wait;
+            opacity: 0.7;
+        }
+
+        #message {
+            display: none;
+            margin-top: 18px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        #message.error {
+            display: block;
+            background: #fff0f0;
+            color: #a32121;
+        }
+
+        #message.success {
+            display: block;
+            background: #edf8f0;
+            color: #216b38;
+        }
+
+        .footer {
+            margin-top: 28px;
+            color: #7b8493;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 32px 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="login-card">
+        <div class="brand-mark" aria-hidden="true">DCC</div>
+
+        <h1>Admin Portal</h1>
+
+        <p class="subtitle">
+            DCC Information Hub<br>
+            Sign in to manage information and content.
+        </p>
+
+        <form id="loginForm">
+            <label for="username">Username</label>
+            <input
+                id="username"
+                name="username"
+                type="text"
+                autocomplete="username"
+                required
+                minlength="3"
+                maxlength="40"
+            >
+
+            <label for="password">Password</label>
+            <input
+                id="password"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                required
+                maxlength="1024"
+            >
+
+            <button id="loginButton" type="submit">
+                Sign In
+            </button>
+
+            <div id="message" role="alert" aria-live="polite"></div>
+        </form>
+
+        <p class="footer">
+            Authorised personnel only
+        </p>
+    </main>
+
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const loginButton = document.getElementById('loginButton');
+        const message = document.getElementById('message');
+
+        loginForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            message.className = '';
+            message.textContent = '';
+            message.style.display = 'none';
+
+            loginButton.disabled = true;
+            loginButton.textContent = 'Signing in...';
+
+            try {
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        username: document.getElementById('username').value.trim(),
+                        password: document.getElementById('password').value
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(
+                        result.message || 'Unable to sign in. Please try again.'
+                    );
+                }
+
+                message.textContent = 'Login successful. Opening the admin portal...';
+                message.className = 'success';
+
+                window.location.href = '/admin-dashboard.html';
+            } catch (error) {
+                message.textContent =
+                    error.message === 'Failed to fetch'
+                        ? 'Unable to connect. Please check your connection and try again.'
+                        : error.message;
+
+                message.className = 'error';
+            } finally {
+                loginButton.disabled = false;
+                loginButton.textContent = 'Sign In';
+            }
+        });
+    </script>
+</body>
+</html>
+```
