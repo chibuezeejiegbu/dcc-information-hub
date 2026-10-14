@@ -27,6 +27,7 @@
   data: {},
   events: [],
   worshipCentres: [],
+  forms: [],
   ready: false,
   loading: true,
   awaitingWhatsApp: false,
@@ -386,24 +387,32 @@ if (service.end_time) {
   function extractHeadings(file, level = 3) {
     return parseSections(state.data[file] || '').filter(s => s.level === level);
   }
+  
+function formsMenu() {
+  const forms = state.forms || [];
 
-  function parseForms() {
-    return extractHeadings('03-forms-registration.md', 3)
-      .filter(s => /^\d+\./.test(s.title))
-      .map(s => {
-        const title = s.title.replace(/^\d+\.\s*/, '');
-        const body = s.lines.join('\n');
-        const url = (body.match(/https?:\/\/\S+/) || [])[0] || '';
-        return {title, section:s, url:url.replace(/[)>.,]+$/g,'')};
-      });
-  }
+  addBot(
+    '<strong>Forms & Registration</strong><br>' +
+    'Select the form you need.'
+  );
 
-  function formsMenu() {
-    const forms = parseForms();
-    addBot('<strong>Forms & Registration</strong><br>Select the form you need.');
-    addMenu(forms.map(f => ({label:f.title, action:() => formDetails(f.title)})));
+  if (!forms.length) {
+    addBot(
+      'Forms are temporarily unavailable. Please try again later.'
+    );
     addUtilityButtons();
+    return;
   }
+
+  addMenu(
+    forms.map(form => ({
+      label: form.name,
+      action: () => formDetails(form.form_id)
+    }))
+  );
+
+  addUtilityButtons();
+}
 
 function getFormMessage(title) {
   const t = title.toLowerCase();
@@ -452,42 +461,6 @@ function getFormMessage(title) {
   };
 }
 
-function getFormMessage(title) {
-  const t = title.toLowerCase();
-
-  if (t.includes('interest group')) {
-    return {
-      message: 'Click the button below to register for an interest group.',
-      button: 'Register'
-    };
-  }
-
-  if (t.includes('first timer')) {
-    return {
-      message: 'Welcome to David’s Christian Centre. Please click the button below to fill the form, and a member of our team will reach out to welcome you warmly.',
-      button: 'Fill Welcome Form'
-    };
-  }
-
-  if (t.includes('child naming')) {
-    return {
-      message: 'Congratulations on the safe arrival of your baby! Please click the button below to complete the child naming form.',
-      button: 'Complete Naming Form'
-    };
-  }
-
-  if (t.includes('facility usage')) {
-    return {
-      message: 'Please click the button below to submit your facility usage request.',
-      button: 'Submit Facility Request'
-    };
-  }
-
-  return {
-    message: 'Please click the button below to complete this form.',
-    button: 'Complete Form'
-  };
-}
 
 function extractDeadlineNote(text) {
   const cleaned = cleanMarkdown(text);
@@ -554,30 +527,47 @@ function extractDeadlineNote(text) {
   return note;
 }
 
-  function formDetails(title) {
-  const form = parseForms().find(
-    f => f.title.toLowerCase() === title.toLowerCase()
-  ) || parseForms().find(
-    f => f.title.toLowerCase().includes(title.toLowerCase())
+  
+function formDetails(formId) {
+  const form = (state.forms || []).find(
+    item => item.form_id === formId
   );
 
-  if (!form) return missing();
+  if (!form) {
+    return missing();
+  }
 
-  const text = sectionText(form.section);
-  const presentation = getFormMessage(form.title);
-  const deadline = extractDeadlineNote(text);
+  const presentation = getFormMessage(form.name);
+  const purpose = form.purpose || '';
+  const deadlineRule = (form.deadline_rule || '').trim();
+
+  const noDeadline =
+    /^(not stated|not stated on accessible page|none|n\/a|na|not applicable|nil)$/i;
+
+  const deadline =
+    deadlineRule && !noDeadline.test(deadlineRule)
+      ? deadlineRule
+      : '';
 
   let html =
-    `<strong>${escapeHtml(form.title)}</strong>` +
+    `<strong>${escapeHtml(form.name)}</strong>` +
     `<div class="md-result">${escapeHtml(presentation.message)}</div>`;
 
-  if (deadline) {
-    html += `<div class="notice"><strong>Note:</strong> ${escapeHtml(deadline)}</div>`;
+  if (purpose) {
+    html +=
+      `<div class="md-result">${escapeHtml(purpose)}</div>`;
   }
 
-  if (form.url) {
-    html += `<div class="link-row">${link(presentation.button, form.url)}</div>`;
+  if (deadline) {
+    html +=
+      `<div class="notice"><strong>Note:</strong> ` +
+      `${escapeHtml(deadline)}</div>`;
   }
+
+  html +=
+    `<div class="link-row">` +
+    `${link(presentation.button, form.link)}` +
+    `</div>`;
 
   addBot(html);
   addUtilityButtons();
@@ -1280,6 +1270,32 @@ async function loadWorshipCentresFromApi() {
   return state.worshipCentres;
 }
 
+  
+async function loadFormsFromApi() {
+  const res = await fetch('/api/forms', {
+    cache: 'no-store'
+  });
+
+  if (!res.ok) {
+    throw new Error(`Could not load forms: ${res.status}`);
+  }
+
+  const result = await res.json();
+
+  if (!result.success || !Array.isArray(result.forms)) {
+    throw new Error(result.message || 'Invalid forms response');
+  }
+
+  state.forms = result.forms.filter(
+    form => form.status === 'active' && form.name && form.link
+  );
+
+  console.log('Forms loaded from MongoDB:', state.forms);
+
+  return state.forms;
+}
+
+
   function bind() {
     document.querySelectorAll('.quick').forEach(q => {
       q.setAttribute('role','button'); q.setAttribute('tabindex','0');
@@ -1310,6 +1326,7 @@ async function loadWorshipCentresFromApi() {
   await loadKnowledgeBase();
   await loadEventsFromApi();
   await loadWorshipCentresFromApi();
+  await loadFormsFromApi();
 
   state.ready = true;
     state.loading = false;
