@@ -388,8 +388,17 @@ if (service.end_time) {
     return parseSections(state.data[file] || '').filter(s => s.level === level);
   }
   
+
 function formsMenu() {
-  const forms = state.forms || [];
+  const forms = [...(state.forms || [])]
+    .filter(form =>
+      form.status === 'active' &&
+      form.name &&
+      form.form_id &&
+      form.link &&
+      form.button_label
+    )
+    .sort((a, b) => a.menu_order - b.menu_order);
 
   addBot(
     '<strong>Forms & Registration</strong><br>' +
@@ -413,121 +422,8 @@ function formsMenu() {
 
   addUtilityButtons();
 }
-
-function getFormMessage(title) {
-  const t = title.toLowerCase();
-
-  if (t.includes('interest group')) {
-    return {
-      message:
-        'Click the button below to register for an interest group.',
-      button:
-        'Register'
-    };
-  }
-
-  if (t.includes('first timer')) {
-    return {
-      message:
-        'Welcome to David’s Christian Centre. Please click the button below to fill the form, and a member of our team will reach out to welcome you warmly.',
-      button:
-        'Fill Welcome Form'
-    };
-  }
-
-  if (t.includes('child naming')) {
-    return {
-      message:
-        'Congratulations on the safe arrival of your baby! Please click the button below to complete the child naming form.',
-      button:
-        'Complete Naming Form'
-    };
-  }
-
-  if (t.includes('facility usage')) {
-    return {
-      message:
-        'Please click the button below to submit your facility usage request.',
-      button:
-        'Submit Facility Request'
-    };
-  }
-
-  return {
-    message:
-      'Please click the button below to complete this form.',
-    button:
-      'Complete Form'
-  };
-}
-
-
-function extractDeadlineNote(text) {
-  const cleaned = cleanMarkdown(text);
-
-  // First, look specifically for an explicit "Deadline:" field.
-  const deadlineMatch = cleaned.match(
-    /\bdeadline\s*:\s*(.*?)(?=[.\n]|$)/i
-  );
-
-  if (deadlineMatch) {
-    let note = deadlineMatch[1]
-      .replace(/\*\*/g, '')
-      .trim();
-
-    // Ignore placeholders such as:
-    // "Not stated."
-    // "Not stated on the accessible page."
-    // "N/A."
-    // "None."
-    // etc.
-    if (
-      /^(not stated|none|n\/a|na|not applicable|nil|none stated)\b/i.test(note)
-    ) {
-      return '';
-    }
-
-    if (/^must be filled/i.test(note)) {
-      note = note.replace(
-        /^must be filled/i,
-        'You must fill this form'
-      );
-    }
-
-    return note;
-  }
-
-  // If there is no explicit "Deadline:" field,
-  // look for other natural deadline wording.
-  const sentences = cleaned
-    .split(/(?<=[.!?])\s+/)
-    .map(s => s.trim())
-    .filter(Boolean);
-
-  const deadlineSentence = sentences.find(sentence =>
-    /\b(must be (made|submitted|received|completed|filled)|submit(?:ted)?\s+(?:by|before)|no later than|at least \d+\s+(?:days?|weeks?|hours?)|before the (?:event|date)|prior to)\b/i.test(sentence)
-  );
-
-  if (!deadlineSentence) {
-    return '';
-  }
-
-  let note = deadlineSentence
-    .replace(/^[-•*]\s*/, '')
-    .replace(/\*\*/g, '')
-    .trim();
-
-  if (/^must be filled/i.test(note)) {
-    note = note.replace(
-      /^must be filled/i,
-      'You must fill this form'
-    );
-  }
-
-  return note;
-}
-
   
+
 function formDetails(formId) {
   const form = (state.forms || []).find(
     item => item.form_id === formId
@@ -537,12 +433,11 @@ function formDetails(formId) {
     return missing();
   }
 
-  const presentation = getFormMessage(form.name);
-  const purpose = form.purpose || '';
+  const purpose = (form.purpose || '').trim();
   const deadlineRule = (form.deadline_rule || '').trim();
 
   const noDeadline =
-    /^(not stated|not stated on accessible page|none|n\/a|na|not applicable|nil)$/i;
+    /^(not stated(?: on the accessible page)?|none|n\/a|na|not applicable|nil|none stated)\.?$/i;
 
   const deadline =
     deadlineRule && !noDeadline.test(deadlineRule)
@@ -550,8 +445,7 @@ function formDetails(formId) {
       : '';
 
   let html =
-    `<strong>${escapeHtml(form.name)}</strong>` +
-    `<div class="md-result">${escapeHtml(presentation.message)}</div>`;
+    `<strong>${escapeHtml(form.name)}</strong>`;
 
   if (purpose) {
     html +=
@@ -566,7 +460,7 @@ function formDetails(formId) {
 
   html +=
     `<div class="link-row">` +
-    `${link(presentation.button, form.link)}` +
+    `${link(form.button_label, form.link)}` +
     `</div>`;
 
   addBot(html);
