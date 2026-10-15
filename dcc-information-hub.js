@@ -658,7 +658,87 @@ function formDetails(formId) {
   return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
+  function formatEventDate(value) {
+  if (!value) return '';
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+  function formatServiceTime(timeValue) {
+  if (!timeValue) return '';
+  const [hour, minute] = String(timeValue).split(':').map(Number);
+  if (Number.isNaN(hour) || Number.isNaN(minute)) return String(timeValue);
+  const period = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour % 12 || 12;
+  return minute === 0
+    ? `${displayHour} ${period}`
+    : `${displayHour}:${String(minute).padStart(2, '0')} ${period}`;
+}
+
+  function getMonthlyTopicBranchSchedule(event) {
+  const centres = Array.isArray(state.worshipCentres) ? state.worshipCentres : [];
+  const isMidweek = /mid.?week/i.test(event.title || event.service_period || '');
+  const branchDefinitions = [
+    { label: 'Mainland', centreName: 'DCC Mainland (Victory Dome)' },
+    { label: 'Island', centreName: 'DCC Island (DCC Lekki)' }
+  ];
+
+  return branchDefinitions.map(branch => {
+    const centre = centres.find(item => item.name === branch.centreName);
+    if (!centre || !Array.isArray(centre.services)) {
+      return { label: branch.label, times: 'Service times unavailable' };
+    }
+
+    const services = centre.services.filter(service => {
+      const day = String(service.day || '').toLowerCase();
+      const serviceLabel = String(service.label || '').toLowerCase();
+      if (isMidweek) {
+        return day === 'tuesday' || day === 'wednesday' ||
+          serviceLabel.includes('mid-week') || serviceLabel.includes('midweek');
+      }
+      return day === 'sunday' || serviceLabel.includes('sunday');
+    });
+
+    const times = services.map(service => {
+      const start = formatServiceTime(service.start_time);
+      const end = formatServiceTime(service.end_time);
+      return start && end ? `${start} – ${end}` : (start || end);
+    }).filter(Boolean);
+
+    return {
+      label: branch.label,
+      times: times.length ? times.join('; ') : 'Service times unavailable'
+    };
+  });
+}
+
   function eventDetails(event) {
+  // Monthly service topics reuse the live worship-centre service data.
+  if (event.event_type === 'monthly_service_topic') {
+    let html = `<strong>Topic: ${escapeHtml(event.topic || event.title || 'Service topic')}</strong>`;
+    const displayDate = event.display_date ||
+      (event.start_date && event.end_date
+        ? `${formatEventDate(event.start_date)} – ${formatEventDate(event.end_date)}`
+        : '');
+
+    if (displayDate) {
+      html += `<div class="md-result"><strong>Date:</strong> ${escapeHtml(displayDate)}</div>`;
+    }
+
+    const branches = getMonthlyTopicBranchSchedule(event);
+    html += `<div class="md-result"><strong>Branch schedule</strong><ul>` +
+      branches.map(branch =>
+        `<li><strong>${escapeHtml(branch.label)}:</strong> ${escapeHtml(branch.times)}</li>`
+      ).join('') +
+      `</ul></div>`;
+
+    if (event.note) html += `<div class="notice">${escapeHtml(event.note)}</div>`;
+    addBot(html);
+    addUtilityButtons();
+    return;
+  }
+
   let html = `<strong>${escapeHtml(event.title || 'DCC Event')}</strong>`;
 
   if (event.start_date) {
@@ -667,7 +747,8 @@ function formDetails(formId) {
     html += `<div class="md-result"><strong>Date:</strong> ${escapeHtml(start)}${end ? ` – ${escapeHtml(end)}` : ''}</div>`;
   }
 
-  if (event.recurrence) {
+  const hasProgrammeSchedule = Array.isArray(event.schedule) && event.schedule.length > 0;
+  if (event.recurrence && !hasProgrammeSchedule) {
     const recurrence = typeof event.recurrence === 'string' ? event.recurrence : JSON.stringify(event.recurrence);
     html += `<div class="md-result"><strong>Schedule:</strong> ${escapeHtml(recurrence)}</div>`;
   }
@@ -678,37 +759,28 @@ function formDetails(formId) {
     html += `</div>`;
   }
 
-  if (event.centre_schedule && typeof event.centre_schedule === 'object') {
-    const schedules = Object.entries(event.centre_schedule).map(([centre, details]) => {
-      const value = typeof details === 'string' ? details : JSON.stringify(details);
-      return `<li><strong>${escapeHtml(centre)}:</strong> ${escapeHtml(value)}</li>`;
-    }).join('');
-    if (schedules) html += `<div class="md-result"><strong>Branch schedule</strong><ul>${schedules}</ul></div>`;
-  }
-
-  if (event.times_by_centre && typeof event.times_by_centre === 'object') {
-    const times = Object.entries(event.times_by_centre).map(([centre, time]) =>
-      `<li><strong>${escapeHtml(centre)}:</strong> ${escapeHtml(typeof time === 'string' ? time : JSON.stringify(time))}</li>`
-    ).join('');
-    if (times) html += `<div class="md-result"><strong>Service times by centre</strong><ul>${times}</ul></div>`;
-  }
-
-  if (Array.isArray(event.schedule)) {
-    const items = event.schedule.map(item => {
+  if (hasProgrammeSchedule) {
+    const scheduleItems = event.schedule.map(item => {
       const parts = [];
       if (item.title) parts.push(`<strong>${escapeHtml(item.title)}:</strong>`);
-      if (item.start_date) parts.push(escapeHtml(formatEventDate(item.start_date)));
-      if (item.end_date && item.end_date !== item.start_date) parts.push(`– ${escapeHtml(formatEventDate(item.end_date))}`);
+      if (item.start_date) {
+        let dateText = formatEventDate(item.start_date);
+        if (item.end_date && item.end_date !== item.start_date) dateText += ` – ${formatEventDate(item.end_date)}`;
+        parts.push(escapeHtml(dateText) + (item.time ? ',' : ''));
+      }
       if (item.time) parts.push(escapeHtml(item.time));
-      if (item.venue) parts.push(`Venue: ${escapeHtml(item.venue)}`);
-      if (item.format) parts.push(escapeHtml(item.format));
+      if (item.venue) {
+        const venueText = String(item.venue).replace(/\s+branch$/i, '');
+        parts.push(`at ${escapeHtml(venueText)}${item.format === 'In person' ? ' branch' : ''}`);
+      } else if (item.format) {
+        parts.push(escapeHtml(item.format === 'Virtual' ? 'via Zoom' : item.format));
+      }
       return `<li>${parts.join(' ')}</li>`;
     }).join('');
-    if (items) html += `<div class="md-result"><strong>Programme schedule</strong><ul>${items}</ul></div>`;
+    html += `<div class="md-result"><strong>Programme schedule</strong><ul>${scheduleItems}</ul></div>`;
+  } else if (event.venue) {
+    html += `<div class="md-result"><strong>Venue:</strong> ${escapeHtml(event.venue)}</div>`;
   }
-
-  if (event.venue) html += `<div class="md-result"><strong>Venue:</strong> ${escapeHtml(event.venue)}</div>`;
-  if (event.audience) html += `<div class="md-result"><strong>Audience:</strong> ${escapeHtml(event.audience)}</div>`;
 
   if (event.speakers) {
     const speakers = Array.isArray(event.speakers) ? event.speakers.join(', ') : event.speakers;
@@ -716,11 +788,13 @@ function formDetails(formId) {
   }
 
   if (event.description) html += `<div class="md-result">${escapeHtml(event.description)}</div>`;
-  if (event.entry_fee) html += `<div class="md-result"><strong>Entry fee:</strong> ${escapeHtml(typeof event.entry_fee === 'string' ? event.entry_fee : JSON.stringify(event.entry_fee))}</div>`;
-  if (event.registration_link) html += `<div class="link-row">${link('Register', event.registration_link)}</div>`;
+  if (event.entry_fee) {
+    html += `<div class="md-result"><strong>Entry fee:</strong> ${escapeHtml(typeof event.entry_fee === 'string' ? event.entry_fee : JSON.stringify(event.entry_fee))}</div>`;
+  }
+  if (event.registration_link) html += `<div class="link-row">${link(event.registration_label || 'Register', event.registration_link)}</div>`;
   if (event.related_site) html += `<div class="link-row">${link('Related website', event.related_site)}</div>`;
+  if (event.note) html += `<div class="notice">${escapeHtml(event.note)}</div>`;
 
-  html += `<div class="notice">For cancellation or last-minute logistics, please confirm with DCC.</div>`;
   addBot(html);
   addUtilityButtons();
 }
