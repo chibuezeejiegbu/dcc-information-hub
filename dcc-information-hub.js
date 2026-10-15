@@ -613,145 +613,114 @@ function formDetails(formId) {
   function eventsMenu() {
   const events = getUpcomingEvents();
 
-  const fixedEvents = [
-    {
-      label: 'All Sundays in October 2026',
-      action: () => octoberSundayServices()
-    },
-    {
-      label: 'All Mid-Week Services in October 2026',
-      action: () => octoberMidweekServices()
-    },
-    {
-      label: 'Career Prep 2026',
-      action: () => careerPrep2026()
-    }
-  ];
-
-  const databaseEvents = events.map(e => ({
-    label: e.title,
-    action: () => eventDetails(e)
-  }));
-
   addBot(
     '<strong>Here are the currently scheduled upcoming DCC events.</strong><br>' +
     'Which event would you like to know more about?'
   );
 
-  addMenu([...fixedEvents, ...databaseEvents]);
-
-  addUtilityButtons();
-}
-
-  function octoberSundayServices() {
-  addBot(
-    '<strong>All Sundays in October 2026</strong>' +
-    '<div class="md-result">' +
-    '<strong>Topic:</strong> Kingdom Marriage<br><br>' +
-    'The topic for all Sunday sermons in October 2026 is <strong>Kingdom Marriage</strong> for both the Mainland and Island branches.' +
-    '</div>'
-  );
-
-  addUtilityButtons();
-}
-
-  function octoberMidweekServices() {
-  addBot(
-    '<strong>All Mid-Week Services in October 2026</strong>' +
-    '<div class="md-result">' +
-    '<strong>Topic:</strong> The 4 Dimensions of Love<br><br>' +
-    'The topic for all Mid-Week Services in October 2026 is <strong>The 4 Dimensions of Love</strong> for both the Mainland and Island branches.' +
-    '</div>'
-  );
-
-  addUtilityButtons();
-}
-
-  function careerPrep2026() {
-  addBot(
-    '<strong>Career Prep 2026</strong>' +
-    '<div class="md-result">' +
-    '<ol>' +
-    '<li><strong>Theme:</strong> Workplace Evolution</li>' +
-    '<li><strong>5-Day Virtual Training:</strong> 2–6 November, Monday–Friday, 9:00 AM–3:00 PM daily, live via Zoom</li>' +
-    '<li><strong>Career Prep Conference:</strong> Saturday, 7 November at 9:00 AM at DCC Mainland</li>' +
-    '<li><strong>At the Conference:</strong> Keynote speakers, networking session, panel session, certificates, 90-Day Career Action Plan</li>' +
-    '<li><strong>Training Tracks:</strong> Digital Marketing, Business Analysis, Content Creation, Project Management, Data Analytics, Cybersecurity</li>' +
-    '</ol>' +
-    '</div>'
-  );
-
-  addBot(
-    '<div class="link-row">' +
-    link('Register', 'https://luma.com/careerprep2026') +
-    '</div>'
-  );
-
-  addUtilityButtons();
-}
-  
-  function parseDateFromText(text) {
-    const m = text.match(/(?:Date|Dates):\*?\*?\s*(?:[A-Za-z]+\s+)?(\d{1,2})[\s–-]+(?:\d{1,2}\s+)?([A-Za-z]+)\s+(\d{4})/i) ||
-              text.match(/(?:Date|Dates):\*?\*?\s*(?:[A-Za-z]+,?\s+)?(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/i);
-    if (!m) return null;
-    const month = new Date(`${m[2]} 1, ${m[3]}`).getMonth();
-    if (Number.isNaN(month)) return null;
-    return new Date(Number(m[3]), month, Number(m[1]));
+  if (!events.length) {
+    addBot('There are no upcoming events listed at the moment. Please check again later or contact DCC for updates.');
+    addUtilityButtons();
+    return;
   }
 
+  addMenu(events.map(event => ({
+    label: event.title,
+    action: () => eventDetails(event)
+  })));
+
+  addUtilityButtons();
+}
+
   function getUpcomingEvents() {
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  return state.events
+  return (state.events || [])
     .filter(event => {
-      if (!event.start_date) return false;
-
-      const eventDate = new Date(event.start_date + 'T00:00:00');
-
-      return eventDate >= now && event.status !== 'cancelled';
+      if (!event.start_date || event.status === 'cancelled') return false;
+      const startDate = new Date(`${event.start_date}T00:00:00`);
+      if (Number.isNaN(startDate.getTime())) return false;
+      const endDate = event.end_date
+        ? new Date(`${event.end_date}T23:59:59`)
+        : new Date(`${event.start_date}T23:59:59`);
+      if (Number.isNaN(endDate.getTime())) return false;
+      return endDate >= today;
     })
-    .sort((a, b) => {
-      return new Date(a.start_date) - new Date(b.start_date);
-    })
-    .slice(0, 8);
+    .sort((a, b) => new Date(`${a.start_date}T00:00:00`) - new Date(`${b.start_date}T00:00:00`))
+    .slice(0, 20);
+}
+
+  function formatEventDate(value) {
+  if (!value) return '';
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
   function eventDetails(event) {
   let html = `<strong>${escapeHtml(event.title || 'DCC Event')}</strong>`;
 
   if (event.start_date) {
-    html += `<div class="md-result"><strong>Date:</strong> ${escapeHtml(event.start_date)}</div>`;
+    const start = formatEventDate(event.start_date);
+    const end = event.end_date && event.end_date !== event.start_date ? formatEventDate(event.end_date) : '';
+    html += `<div class="md-result"><strong>Date:</strong> ${escapeHtml(start)}${end ? ` – ${escapeHtml(end)}` : ''}</div>`;
   }
 
-  if (event.end_date && event.end_date !== event.start_date) {
-    html += `<div class="md-result"><strong>End date:</strong> ${escapeHtml(event.end_date)}</div>`;
+  if (event.recurrence) {
+    const recurrence = typeof event.recurrence === 'string' ? event.recurrence : JSON.stringify(event.recurrence);
+    html += `<div class="md-result"><strong>Schedule:</strong> ${escapeHtml(recurrence)}</div>`;
   }
 
   if (event.start_time) {
     html += `<div class="md-result"><strong>Time:</strong> ${escapeHtml(event.start_time)}`;
-
-    if (event.end_time) {
-      html += ` – ${escapeHtml(event.end_time)}`;
-    }
-
+    if (event.end_time) html += ` – ${escapeHtml(event.end_time)}`;
     html += `</div>`;
   }
 
-  if (event.venue) {
-    html += `<div class="md-result"><strong>Venue:</strong> ${escapeHtml(event.venue)}</div>`;
+  if (event.centre_schedule && typeof event.centre_schedule === 'object') {
+    const schedules = Object.entries(event.centre_schedule).map(([centre, details]) => {
+      const value = typeof details === 'string' ? details : JSON.stringify(details);
+      return `<li><strong>${escapeHtml(centre)}:</strong> ${escapeHtml(value)}</li>`;
+    }).join('');
+    if (schedules) html += `<div class="md-result"><strong>Branch schedule</strong><ul>${schedules}</ul></div>`;
   }
 
-  if (event.audience) {
-    html += `<div class="md-result"><strong>Audience:</strong> ${escapeHtml(event.audience)}</div>`;
+  if (event.times_by_centre && typeof event.times_by_centre === 'object') {
+    const times = Object.entries(event.times_by_centre).map(([centre, time]) =>
+      `<li><strong>${escapeHtml(centre)}:</strong> ${escapeHtml(typeof time === 'string' ? time : JSON.stringify(time))}</li>`
+    ).join('');
+    if (times) html += `<div class="md-result"><strong>Service times by centre</strong><ul>${times}</ul></div>`;
   }
 
-  if (event.description) {
-    html += `<div class="md-result">${escapeHtml(event.description)}</div>`;
+  if (Array.isArray(event.schedule)) {
+    const items = event.schedule.map(item => {
+      const parts = [];
+      if (item.title) parts.push(`<strong>${escapeHtml(item.title)}:</strong>`);
+      if (item.start_date) parts.push(escapeHtml(formatEventDate(item.start_date)));
+      if (item.end_date && item.end_date !== item.start_date) parts.push(`– ${escapeHtml(formatEventDate(item.end_date))}`);
+      if (item.time) parts.push(escapeHtml(item.time));
+      if (item.venue) parts.push(`Venue: ${escapeHtml(item.venue)}`);
+      if (item.format) parts.push(escapeHtml(item.format));
+      return `<li>${parts.join(' ')}</li>`;
+    }).join('');
+    if (items) html += `<div class="md-result"><strong>Programme schedule</strong><ul>${items}</ul></div>`;
   }
 
-  html += `<div class="notice">For cancellation, registration or last-minute logistics, please confirm with DCC.</div>`;
+  if (event.venue) html += `<div class="md-result"><strong>Venue:</strong> ${escapeHtml(event.venue)}</div>`;
+  if (event.audience) html += `<div class="md-result"><strong>Audience:</strong> ${escapeHtml(event.audience)}</div>`;
 
+  if (event.speakers) {
+    const speakers = Array.isArray(event.speakers) ? event.speakers.join(', ') : event.speakers;
+    html += `<div class="md-result"><strong>Speakers:</strong> ${escapeHtml(speakers)}</div>`;
+  }
+
+  if (event.description) html += `<div class="md-result">${escapeHtml(event.description)}</div>`;
+  if (event.entry_fee) html += `<div class="md-result"><strong>Entry fee:</strong> ${escapeHtml(typeof event.entry_fee === 'string' ? event.entry_fee : JSON.stringify(event.entry_fee))}</div>`;
+  if (event.registration_link) html += `<div class="link-row">${link('Register', event.registration_link)}</div>`;
+  if (event.related_site) html += `<div class="link-row">${link('Related website', event.related_site)}</div>`;
+
+  html += `<div class="notice">For cancellation or last-minute logistics, please confirm with DCC.</div>`;
   addBot(html);
   addUtilityButtons();
 }
