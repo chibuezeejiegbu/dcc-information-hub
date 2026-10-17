@@ -465,12 +465,11 @@ function formDetails(formId) {
 
   addBot(html);
   addUtilityButtons();
-}
+}  
 
-  
+let givingAccountsCache = null;
+
 async function giving() {
-  addBot('<strong>Giving</strong><br>Loading official giving account details...');
-
   try {
     const response = await fetch('/api/giving-accounts', {
       cache: 'no-store'
@@ -486,113 +485,42 @@ async function giving() {
       throw new Error('Invalid giving accounts API response');
     }
 
-    const accounts = result.givingAccounts.filter(account =>
+    givingAccountsCache = result.givingAccounts.filter(account =>
       account.bank &&
       account.account_name &&
       account.account_number &&
       account.currency
     );
 
-    if (!accounts.length) {
-      els.chat.lastElementChild?.remove();
+    const banks = [
+      ...new Set(givingAccountsCache.map(account => account.bank))
+    ];
 
-      addBot(
-        '<strong>Giving accounts unavailable</strong><br>' +
-        'No giving account details are currently available. ' +
-        'Please use the official DCC giving page.'
-      );
-
-      addBot(
-        `<div class="link-row">${link(
-          'Open official Giving page',
-          'https://www.davidschristiancentre.org/give'
-        )}</div>`
-      );
-
-      addUtilityButtons();
-      return;
+    if (!banks.length) {
+      throw new Error('No giving banks are available');
     }
 
-    const currencyOrder = ['NGN', 'USD', 'GBP', 'EUR'];
+    addBot(
+      '<strong>Giving</strong><div class="md-result">' +
+      'Choose a bank to view its giving account details.' +
+      '</div>'
+    );
 
-    accounts.sort((a, b) => {
-      const aIndex = currencyOrder.indexOf(a.currency);
-      const bIndex = currencyOrder.indexOf(b.currency);
+    addMenu(
+      banks.map(bank => ({
+        label: bank,
+        action: () => givingBankDetails(bank)
+      }))
+    );
 
-      const aOrder = aIndex === -1 ? currencyOrder.length : aIndex;
-      const bOrder = bIndex === -1 ? currencyOrder.length : bIndex;
-
-      return aOrder - bOrder ||
-        a.bank.localeCompare(b.bank);
-    });
-
-    const groupedAccounts = accounts.reduce((groups, account) => {
-      if (!groups[account.currency]) {
-        groups[account.currency] = [];
-      }
-
-      groups[account.currency].push(account);
-      return groups;
-    }, {});
-
-    let html = '<strong>Giving</strong>';
-
-    html +=
-      '<div class="md-result">' +
-      'Please use the account details for the currency you wish to give in. ' +
-      'Verify the details on the official DCC giving page before making a transfer.' +
-      '</div>';
-
-    for (const [currency, currencyAccounts] of Object.entries(groupedAccounts)) {
-      html += `<div class="md-result"><strong>${escapeHtml(currency)} Accounts</strong>`;
-
-      for (const account of currencyAccounts) {
-        html += '<div class="md-result">';
-
-        html += `<strong>${escapeHtml(account.bank)}</strong><br>`;
-        html += `<strong>Account Name:</strong> ${escapeHtml(account.account_name)}<br>`;
-        html += `<strong>Account Number:</strong> ${escapeHtml(account.account_number)}`;
-
-        if (account.swift_bic) {
-          html += `<br><strong>SWIFT/BIC:</strong> ${escapeHtml(account.swift_bic)}`;
-        }
-
-        if (account.sort_code) {
-          html += `<br><strong>Sort Code:</strong> ${escapeHtml(account.sort_code)}`;
-        }
-
-        html += '</div>';
-      }
-
-      html += '</div>';
-    }
-
-    html +=
-      '<div class="notice">' +
-      'Please confirm all account details on the official DCC giving page before transferring funds.' +
-      '</div>';
-
-    html +=
-      `<div class="link-row">${link(
-        'Open official Giving page',
-        'https://www.davidschristiancentre.org/give'
-      )}</div>`;
-
-    els.chat.lastElementChild?.remove();
-    addBot(html);
     addUtilityButtons();
 
   } catch (error) {
-    console.error('Failed to load giving accounts:', error);
-
-    els.chat.lastElementChild?.remove();
+    console.error('Could not load giving banks:', error);
 
     addBot(
-      '<strong>Giving account details could not be loaded.</strong><br>' +
-      'Please visit the official DCC giving page to verify the correct account details.'
-    );
-
-    addBot(
+      '<strong>Giving information is currently unavailable.</strong><br>' +
+      'Please visit the official DCC giving page for assistance.' +
       `<div class="link-row">${link(
         'Open official Giving page',
         'https://www.davidschristiancentre.org/give'
@@ -603,6 +531,57 @@ async function giving() {
   }
 }
 
+function givingBankDetails(bankName) {
+  if (!Array.isArray(givingAccountsCache)) {
+    return giving();
+  }
+
+  const accounts = givingAccountsCache
+    .filter(account => account.bank === bankName)
+    .sort((a, b) => a.currency.localeCompare(b.currency));
+
+  if (!accounts.length) {
+    addBot(
+      '<strong>No account details found for this bank.</strong>'
+    );
+    addUtilityButtons();
+    return;
+  }
+
+  let html = `<strong>${escapeHtml(bankName)}</strong>`;
+
+  for (const account of accounts) {
+    html += '<div class="md-result">';
+    html += `<strong>${escapeHtml(account.currency)}</strong><br>`;
+    html += `<strong>Account Name:</strong> ${escapeHtml(account.account_name)}<br>`;
+    html += `<strong>Account Number:</strong> ${escapeHtml(account.account_number)}`;
+
+    if (account.swift_bic) {
+      html += `<br><strong>SWIFT/BIC:</strong> ${escapeHtml(account.swift_bic)}`;
+    }
+
+    if (account.sort_code) {
+      html += `<br><strong>Sort Code:</strong> ${escapeHtml(account.sort_code)}`;
+    }
+
+    html += '</div>';
+  }
+
+  html +=
+    '<div class="notice">' +
+    'Please use the account details for the currency you wish to give in. ' +
+    'Verify the details on the official DCC giving page before making a transfer.' +
+    '</div>';
+
+  html +=
+    `<div class="link-row">${link(
+      'Open official Giving page',
+      'https://www.davidschristiancentre.org/give'
+    )}</div>`;
+
+  addBot(html);
+  addUtilityButtons();
+}
 
   function parseRoster(kind) {
     const md = state.data['05-leadership-workforce.md'] || '';
