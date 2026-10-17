@@ -467,13 +467,142 @@ function formDetails(formId) {
   addUtilityButtons();
 }
 
-  function giving() {
-    const section = faqSection('Giving');
-    if (!section) return missing();
-    const text = sectionText(section);
-    addBot(`<strong>Giving</strong><div class="md-result">${formatLines(text)}</div><div class="notice">To make sure everything goes smoothly, please check our official giving page for our details before making a transfer.</div><div class="link-row">${link('Open official Giving page','https://www.davidschristiancentre.org/give')}</div>`);
+  
+async function giving() {
+  addBot('<strong>Giving</strong><br>Loading official giving account details...');
+
+  try {
+    const response = await fetch('/api/giving-accounts', {
+      cache: 'no-store'
+    });
+
+    if (!response.ok) {
+      throw new Error(`Giving accounts API returned ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    if (!result.success || !Array.isArray(result.givingAccounts)) {
+      throw new Error('Invalid giving accounts API response');
+    }
+
+    const accounts = result.givingAccounts.filter(account =>
+      account.bank &&
+      account.account_name &&
+      account.account_number &&
+      account.currency
+    );
+
+    if (!accounts.length) {
+      els.chat.lastElementChild?.remove();
+
+      addBot(
+        '<strong>Giving accounts unavailable</strong><br>' +
+        'No giving account details are currently available. ' +
+        'Please use the official DCC giving page.'
+      );
+
+      addBot(
+        `<div class="link-row">${link(
+          'Open official Giving page',
+          'https://www.davidschristiancentre.org/give'
+        )}</div>`
+      );
+
+      addUtilityButtons();
+      return;
+    }
+
+    const currencyOrder = ['NGN', 'USD', 'GBP', 'EUR'];
+
+    accounts.sort((a, b) => {
+      const aIndex = currencyOrder.indexOf(a.currency);
+      const bIndex = currencyOrder.indexOf(b.currency);
+
+      const aOrder = aIndex === -1 ? currencyOrder.length : aIndex;
+      const bOrder = bIndex === -1 ? currencyOrder.length : bIndex;
+
+      return aOrder - bOrder ||
+        a.bank.localeCompare(b.bank);
+    });
+
+    const groupedAccounts = accounts.reduce((groups, account) => {
+      if (!groups[account.currency]) {
+        groups[account.currency] = [];
+      }
+
+      groups[account.currency].push(account);
+      return groups;
+    }, {});
+
+    let html = '<strong>Giving</strong>';
+
+    html +=
+      '<div class="md-result">' +
+      'Please use the account details for the currency you wish to give in. ' +
+      'Verify the details on the official DCC giving page before making a transfer.' +
+      '</div>';
+
+    for (const [currency, currencyAccounts] of Object.entries(groupedAccounts)) {
+      html += `<div class="md-result"><strong>${escapeHtml(currency)} Accounts</strong>`;
+
+      for (const account of currencyAccounts) {
+        html += '<div class="md-result">';
+
+        html += `<strong>${escapeHtml(account.bank)}</strong><br>`;
+        html += `<strong>Account Name:</strong> ${escapeHtml(account.account_name)}<br>`;
+        html += `<strong>Account Number:</strong> ${escapeHtml(account.account_number)}`;
+
+        if (account.swift_bic) {
+          html += `<br><strong>SWIFT/BIC:</strong> ${escapeHtml(account.swift_bic)}`;
+        }
+
+        if (account.sort_code) {
+          html += `<br><strong>Sort Code:</strong> ${escapeHtml(account.sort_code)}`;
+        }
+
+        html += '</div>';
+      }
+
+      html += '</div>';
+    }
+
+    html +=
+      '<div class="notice">' +
+      'Please confirm all account details on the official DCC giving page before transferring funds.' +
+      '</div>';
+
+    html +=
+      `<div class="link-row">${link(
+        'Open official Giving page',
+        'https://www.davidschristiancentre.org/give'
+      )}</div>`;
+
+    els.chat.lastElementChild?.remove();
+    addBot(html);
+    addUtilityButtons();
+
+  } catch (error) {
+    console.error('Failed to load giving accounts:', error);
+
+    els.chat.lastElementChild?.remove();
+
+    addBot(
+      '<strong>Giving account details could not be loaded.</strong><br>' +
+      'Please visit the official DCC giving page to verify the correct account details.'
+    );
+
+    addBot(
+      `<div class="link-row">${link(
+        'Open official Giving page',
+        'https://www.davidschristiancentre.org/give'
+      )}</div>`
+    );
+
     addUtilityButtons();
   }
+}
+
 
   function parseRoster(kind) {
     const md = state.data['05-leadership-workforce.md'] || '';
