@@ -516,81 +516,119 @@ function formDetails(formId) {
   addUtilityButtons();
 }
   
-  function parseWorkforceDepartments(branch) {
-    const md = state.data['05-leadership-workforce.md'] || '';
-    const sectionHeading = `## ${branch} departments`;
-    const sectionStart = md.indexOf(sectionHeading);
+let workforceDepartmentsCache = null;
 
-    if (sectionStart < 0) return [];
+async function parseWorkforceDepartments(branch) {
+  if (!workforceDepartmentsCache) {
+    try {
+      const response = await fetch('/api/departments');
 
-    const nextSection = md.indexOf('\n## ', sectionStart + sectionHeading.length);
-    const sectionText = md.slice(
-      sectionStart + sectionHeading.length,
-      nextSection >= 0 ? nextSection : md.length
-    );
-    const headings = [...sectionText.matchAll(/^###\s+(.+?)\s*$/gm)];
-
-    return headings.map((heading, index) => {
-      const bodyStart = heading.index + heading[0].length;
-      const bodyEnd = index + 1 < headings.length ? headings[index + 1].index : sectionText.length;
-      const body = sectionText.slice(bodyStart, bodyEnd);
-      const assignments = [];
-
-      for (const line of body.split(/\r?\n/)) {
-        const match = line.match(/^\s*[-*]\s*\*\*(HOD|Assistant HOD):\*\*\s*(.*?)\s*$/i);
-        if (match) {
-          assignments.push({
-            role: match[1].toLowerCase() === 'hod' ? 'HOD' : 'Assistant HOD',
-            name: match[2].trim() || 'Not available'
-          });
-        }
+      if (!response.ok) {
+        throw new Error(`Departments API returned ${response.status}`);
       }
 
-      return { name: heading[1].trim(), assignments };
+      const result = await response.json();
+
+      if (!result.success || !Array.isArray(result.departments)) {
+        throw new Error('Invalid departments API response');
+      }
+
+      workforceDepartmentsCache = result.departments;
+    } catch (error) {
+      console.error('Failed to load departments:', error);
+      return [];
+    }
+  }
+
+  return workforceDepartmentsCache
+    .filter(department =>
+      department.centre?.toLowerCase() === branch.toLowerCase() &&
+      department.status === 'active'
+    )
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(department => {
+      const assignments = [];
+
+      assignments.push({
+        role: 'HOD',
+        name: department.hod?.name || 'Not available'
+      });
+
+      const assistants = Array.isArray(department.assistant_hods)
+        ? department.assistant_hods
+        : [];
+
+      if (assistants.length) {
+        assistants.forEach(assistant => {
+          assignments.push({
+            role: 'Assistant HOD',
+            name: assistant?.name || 'Not available'
+          });
+        });
+      } else {
+        assignments.push({
+          role: 'Assistant HOD',
+          name: 'Not available'
+        });
+      }
+
+      return {
+        name: department.name,
+        assignments
+      };
     });
-  }
+}
 
-  function workforceDepartments(branch) {
-    const departments = parseWorkforceDepartments(branch);
+async function workforceDepartments(branch) {
+  const departments = await parseWorkforceDepartments(branch);
 
-    if (!departments.length) {
-      addBot('<strong>Workforce department information unavailable.</strong><br>I could not find the department list in the current knowledge base.');
-      addUtilityButtons();
-      return;
-    }
-
-    addBot(`<strong>DCC ${escapeHtml(branch)} Workforce Leaders</strong><br>Select a department to view its HOD and Assistant HOD assignments.`);
-    addMenu(departments.map(department => ({
-      label: department.name,
-      action: () => workforceDepartmentDetails(branch, department.name)
-    })));
+  if (!departments.length) {
+    addBot(
+      '<strong>Workforce department information unavailable.</strong><br>' +
+      'The department list could not be loaded. Please try again later.'
+    );
     addUtilityButtons();
+    return;
   }
 
-  function workforceDepartmentDetails(branch, departmentName) {
-    const department = parseWorkforceDepartments(branch)
-      .find(item => item.name === departmentName);
+  addBot(
+    `<strong>DCC ${escapeHtml(branch)} Workforce Leaders</strong><br>` +
+    'Select a department to view its HOD and Assistant HOD assignments.'
+  );
 
-    if (!department) {
-      addBot('<strong>Department information unavailable.</strong>');
-      addUtilityButtons();
-      return;
-    }
+  addMenu(departments.map(department => ({
+    label: department.name,
+    action: () => workforceDepartmentDetails(branch, department.name)
+  })));
 
-    const assignments = department.assignments.length
-      ? department.assignments
-      : [
-          { role: 'HOD', name: 'Not available' },
-          { role: 'Assistant HOD', name: 'Not available' }
-        ];
+  addUtilityButtons();
+}
 
-    const list = assignments.map(item =>
-      `<li><strong>${escapeHtml(item.role)}:</strong> ${escapeHtml(item.name || 'Not available')}</li>`
-    ).join('');
+async function workforceDepartmentDetails(branch, departmentName) {
+  const departments = await parseWorkforceDepartments(branch);
 
-    addBot(`<strong>${escapeHtml(department.name)}</strong><div class="md-result"><ol>${list}</ol></div>`);
+  const department = departments.find(
+    item => item.name === departmentName
+  );
+
+  if (!department) {
+    addBot('<strong>Department information unavailable.</strong>');
     addUtilityButtons();
+    return;
   }
+
+  const list = department.assignments.map(item =>
+    `<li><strong>${escapeHtml(item.role)}:</strong> ` +
+    `${escapeHtml(item.name || 'Not available')}</li>`
+  ).join('');
+
+  addBot(
+    `<strong>${escapeHtml(department.name)}</strong>` +
+    `<div class="md-result"><ol>${list}</ol></div>`
+  );
+
+  addUtilityButtons();
+}
 
   function rosterView(kind, count = null) {
     const roster = parseRoster(kind);
