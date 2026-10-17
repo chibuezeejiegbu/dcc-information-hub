@@ -538,7 +538,17 @@ function givingBankDetails(bankName) {
 
   const accounts = givingAccountsCache
     .filter(account => account.bank === bankName)
-    .sort((a, b) => a.currency.localeCompare(b.currency));
+    .sort((a, b) => {
+  const currencyOrder = {
+    NGN: 1,
+    USD: 2,
+    GBP: 3,
+    EUR: 4
+  };
+
+  return (currencyOrder[a.currency] ?? 99) -
+         (currencyOrder[b.currency] ?? 99);
+});
 
   if (!accounts.length) {
     addBot(
