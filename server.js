@@ -77,6 +77,29 @@ app.get('/dcc-information-hub.js', (req, res) => {
     return res.sendFile(__dirname + '/dcc-information-hub.js');
 });
 
+const knowledgeFiles = [
+    '01-faqs-identity.md',
+    '02-events-calendar.md',
+    '03-forms-registration.md',
+    '04-ministries-fellowships-interest-groups.md',
+    '05-leadership-workforce.md',
+    '06-schools-resources.md',
+    '07-external-ecosystem-socials.md'
+];
+
+knowledgeFiles.forEach((file) => {
+    app.get('/' + file, (req, res) => {
+        res.sendFile(__dirname + '/' + file, (err) => {
+            if (err) {
+                console.error(`Failed to serve ${file}:`, err.message);
+                if (!res.headersSent) {
+                    res.status(err.statusCode || 500).end();
+                }
+            }
+        });
+    });
+});
+
 app.get('/admin.html', (req, res) => {
     res.set('Cache-Control', 'no-store');
     return res.sendFile(__dirname + '/admin.html');
