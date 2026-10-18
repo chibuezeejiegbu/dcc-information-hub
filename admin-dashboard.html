@@ -200,6 +200,18 @@
     }
 
     .hidden { display: none !important; }
+    .resource-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field.full-width { grid-column: 1 / -1; }
+    .field label { font-size: 13px; font-weight: 600; }
+    .field input, .field textarea, .field select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 7px; color: var(--text); background: white; }
+    .field textarea { min-height: 88px; resize: vertical; }
+    .field-checkbox { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
+    .form-actions, .row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .form-actions { margin-top: 20px; }
+    .row-actions .button { padding: 7px 10px; }
+    .resource-url { overflow-wrap: anywhere; }
+    @media (max-width: 800px) { .resource-fields { grid-template-columns: 1fr; } }
 
     @media (max-width: 800px) {
       .layout { grid-template-columns: 1fr; }
@@ -284,8 +296,7 @@
             <h2>Getting started</h2>
             <p class="muted">
               Select a content category from the sidebar to manage its records.
-              Content editing will be enabled after the authenticated management
-              API is installed and tested.
+              Resources can be added and edited here. Other content categories are read-only until their editing rules are configured.
             </p>
           </div>
         </section>
@@ -299,14 +310,29 @@
                   Content records for this category.
                 </p>
               </div>
-              <button class="button primary" id="add-button" disabled>
-                + Add record
+              <button class="button primary" id="add-button" type="button">
+                + Add resource
               </button>
             </div>
 
             <div id="collection-message" class="notice">
               The secure content-management API will be connected in the next step.
             </div>
+
+            <section id="resource-form-panel" class="panel hidden" aria-labelledby="resource-form-title">
+              <div class="panel-head">
+                <h2 id="resource-form-title">Add resource</h2>
+                <button class="button" id="cancel-form-button" type="button">Cancel</button>
+              </div>
+              <div id="form-message" class="notice hidden" role="status"></div>
+              <form id="resource-form">
+                <div id="resource-fields" class="resource-fields"></div>
+                <div class="form-actions">
+                  <button class="button primary" id="save-resource-button" type="submit">Save resource</button>
+                  <button class="button" id="cancel-form-button-bottom" type="button">Cancel</button>
+                </div>
+              </form>
+            </section>
 
             <div class="table-wrap">
               <table>
@@ -315,10 +341,11 @@
                     <th>Record</th>
                     <th>Details</th>
                     <th>Record ID</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody id="records-body">
-                  <tr><td colspan="3">No records loaded.</td></tr>
+                  <tr><td colspan="4">No records loaded.</td></tr>
                 </tbody>
               </table>
             </div>
@@ -399,105 +426,244 @@
       'external-links': 'external_links'
     };
 
+    const addButton = document.getElementById('add-button');
+    const formPanel = document.getElementById('resource-form-panel');
+    const resourceForm = document.getElementById('resource-form');
+    const resourceFields = document.getElementById('resource-fields');
+    const formMessage = document.getElementById('form-message');
+    const saveResourceButton = document.getElementById('save-resource-button');
+    let activeView = 'overview';
+    let editingRecordId = null;
+
+    const resourceFieldConfig = [
+      { name: 'resource_id', label: 'Resource ID', required: true, help: 'Unique internal identifier; cannot be changed after creation.' },
+      { name: 'title', label: 'Title', required: true },
+      { name: 'type', label: 'Type', required: true, placeholder: 'e.g. resource_index, podcast, devotional' },
+      { name: 'url', label: 'URL', required: true, type: 'url', full: true },
+      { name: 'button_label', label: 'Button label', required: true },
+      { name: 'display_order', label: 'Display order', required: true, type: 'number', value: '0' },
+      { name: 'description', label: 'Description', type: 'textarea', full: true },
+      { name: 'source_ref', label: 'Source reference' },
+      { name: 'content_level', label: 'Content level' },
+      { name: 'platform_urls', label: 'Platform URLs', type: 'textarea', full: true, help: 'Optional text/JSON as expected by the existing data schema.' },
+      { name: 'app_store_urls', label: 'App store URLs', type: 'textarea', full: true, help: 'Optional text/JSON as expected by the existing data schema.' },
+      { name: 'is_active', label: 'Active', type: 'checkbox', value: true }
+    ];
+
+    function showFormMessage(text, isError = false) {
+      formMessage.textContent = text;
+      formMessage.className = `notice ${isError ? 'error' : 'success'}`;
+    }
+
+    function renderResourceForm(record = {}) {
+      resourceFields.replaceChildren();
+      resourceFieldConfig.forEach(config => {
+        const wrapper = document.createElement('div');
+        wrapper.className = `field${config.full ? ' full-width' : ''}`;
+        if (config.type === 'checkbox') {
+          wrapper.className += ' field-checkbox';
+          const input = document.createElement('input');
+          input.type = 'checkbox';
+          input.name = config.name;
+          input.id = `resource-${config.name}`;
+          input.checked = record[config.name] === undefined ? Boolean(config.value) : Boolean(record[config.name]);
+          const label = document.createElement('label');
+          label.htmlFor = input.id;
+          label.textContent = config.label;
+          wrapper.append(input, label);
+        } else {
+          const label = document.createElement('label');
+          label.htmlFor = `resource-${config.name}`;
+          label.textContent = config.label + (config.required ? ' *' : '');
+          const input = document.createElement(config.type === 'textarea' ? 'textarea' : 'input');
+          input.id = `resource-${config.name}`;
+          input.name = config.name;
+          if (config.type !== 'textarea') input.type = config.type || 'text';
+          input.required = Boolean(config.required);
+          if (config.placeholder) input.placeholder = config.placeholder;
+          if (config.value !== undefined) input.value = config.value;
+          if (record[config.name] !== undefined && record[config.name] !== null) input.value = String(record[config.name]);
+          if (config.name === 'resource_id' && editingRecordId) {
+            input.disabled = true;
+            input.title = 'Resource ID cannot be changed after creation.';
+          }
+          wrapper.append(label, input);
+          if (config.help) {
+            const help = document.createElement('small');
+            help.className = 'muted';
+            help.textContent = config.help;
+            wrapper.appendChild(help);
+          }
+        }
+        resourceFields.appendChild(wrapper);
+      });
+    }
+
+    function openResourceForm(record = null) {
+      editingRecordId = record ? String(record._id || record.id || '') : null;
+      document.getElementById('resource-form-title').textContent = record ? 'Edit resource' : 'Add resource';
+      saveResourceButton.textContent = record ? 'Save changes' : 'Create resource';
+      formMessage.className = 'notice hidden';
+      resourceForm.reset();
+      renderResourceForm(record || {});
+      formPanel.classList.remove('hidden');
+      formPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function closeResourceForm() {
+      formPanel.classList.add('hidden');
+      resourceForm.reset();
+      editingRecordId = null;
+    }
+
+    function makeCell(text) {
+      const cell = document.createElement('td');
+      cell.textContent = text == null || text === '' ? '—' : String(text);
+      return cell;
+    }
+
     async function loadCollection(view) {
       const notice = document.getElementById('collection-message');
       const tbody = document.getElementById('records-body');
-
+      activeView = view;
+      addButton.disabled = view !== 'resources';
+      addButton.textContent = view === 'resources' ? '+ Add resource' : '+ Add record';
+      closeResourceForm();
       tbody.replaceChildren();
       notice.className = 'notice';
       notice.textContent = 'Loading records…';
-
       const loadingRow = document.createElement('tr');
       const loadingCell = document.createElement('td');
-      loadingCell.colSpan = 3;
+      loadingCell.colSpan = 4;
       loadingCell.textContent = 'Loading…';
       loadingRow.appendChild(loadingCell);
       tbody.appendChild(loadingRow);
 
       try {
         const collection = viewToCollection[view];
-
-        if (!collection) {
-          throw new Error('Unknown content category.');
-        }
-
-        const response = await fetch(
-          `/api/admin/content/${encodeURIComponent(collection)}`,
-          {
-            credentials: 'same-origin',
-            cache: 'no-store'
-          }
-        );
-
+        if (!collection) throw new Error('Unknown content category.');
+        const response = await fetch(`/api/admin/content/${encodeURIComponent(collection)}`, {
+          credentials: 'same-origin', cache: 'no-store'
+        });
         const result = await response.json();
-
         if (!response.ok || result.success !== true) {
-          throw new Error(
-            result.message || `Request failed (${response.status}).`
-          );
+          throw new Error(result.message || `Request failed (${response.status}).`);
         }
-
-        const records = Array.isArray(result.records)
-          ? result.records
-          : [];
-
+        const records = Array.isArray(result.records) ? result.records : [];
         tbody.replaceChildren();
-
-        if (records.length === 0) {
+        if (!records.length) {
           const row = document.createElement('tr');
           const cell = document.createElement('td');
-          cell.colSpan = 3;
+          cell.colSpan = 4;
           cell.textContent = 'No records found in this collection.';
           row.appendChild(cell);
           tbody.appendChild(row);
         } else {
           records.forEach(record => {
             const row = document.createElement('tr');
-
-            const titleCell = document.createElement('td');
-            titleCell.textContent =
-              record.title ||
-              record.name ||
-              record.event_name ||
-              record.resource_id ||
-              '(Untitled record)';
-
-            const detailsCell = document.createElement('td');
-            detailsCell.textContent = Object.entries(record)
-              .filter(([key, value]) =>
-                key !== '_id' &&
-                value !== null &&
-                value !== undefined &&
-                typeof value !== 'object'
-              )
-              .slice(0, 5)
-              .map(([key, value]) => `${key}: ${value}`)
-              .join(' · ') || 'No additional details';
-
-            const idCell = document.createElement('td');
-            idCell.textContent = String(record._id || record.id || '—');
-
-            row.append(titleCell, detailsCell, idCell);
+            row.appendChild(makeCell(record.title || record.name || record.event_name || record.resource_id || '(Untitled record)'));
+            const details = document.createElement('td');
+            if (view === 'resources') {
+              const type = document.createElement('div');
+              type.className = 'muted';
+              type.textContent = record.type || 'Resource';
+              const description = document.createElement('p');
+              description.textContent = record.description || 'No description provided.';
+              const url = document.createElement('a');
+              url.className = 'resource-url';
+              url.href = record.url || '#';
+              url.textContent = record.url || 'No URL';
+              url.target = '_blank';
+              url.rel = 'noopener noreferrer';
+              details.append(type, description, url);
+            } else {
+              details.textContent = Object.entries(record)
+                .filter(([key, value]) => key !== '_id' && value !== null && value !== undefined && typeof value !== 'object')
+                .slice(0, 4).map(([key, value]) => `${key}: ${value}`).join(' · ') || 'No additional details';
+            }
+            row.appendChild(details);
+            row.appendChild(makeCell(String(record._id || record.id || '—')));
+            const actions = document.createElement('td');
+            if (view === 'resources') {
+              const edit = document.createElement('button');
+              edit.type = 'button';
+              edit.className = 'button';
+              edit.textContent = 'Edit';
+              edit.addEventListener('click', () => openResourceForm(record));
+              actions.appendChild(edit);
+            } else {
+              actions.textContent = 'Read only';
+            }
+            row.appendChild(actions);
             tbody.appendChild(row);
           });
         }
-
         notice.className = 'notice success';
         notice.textContent = `Loaded ${records.length} record(s).`;
-
       } catch (error) {
         tbody.replaceChildren();
-
         const row = document.createElement('tr');
         const cell = document.createElement('td');
-        cell.colSpan = 3;
+        cell.colSpan = 4;
         cell.textContent = 'Records could not be loaded.';
         row.appendChild(cell);
         tbody.appendChild(row);
-
         notice.className = 'notice error';
         notice.textContent = error.message || 'Unable to load records.';
       }
+    }
+
+    addButton.addEventListener('click', () => {
+      if (activeView === 'resources') openResourceForm();
+    });
+    document.getElementById('cancel-form-button').addEventListener('click', closeResourceForm);
+    document.getElementById('cancel-form-button-bottom').addEventListener('click', closeResourceForm);
+
+    resourceForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      if (activeView !== 'resources') return;
+      saveResourceButton.disabled = true;
+      saveResourceButton.textContent = 'Saving…';
+      try {
+        const formData = new FormData(resourceForm);
+        const payload = {};
+        for (const config of resourceFieldConfig) {
+          const element = resourceForm.elements.namedItem(config.name);
+          if (config.type === 'checkbox') payload[config.name] = element.checked;
+          else if (config.name === 'display_order') payload[config.name] = Number(element.value);
+          else if (!(config.name === 'resource_id' && editingRecordId)) {
+            const value = element.value.trim();
+            if (value !== '') payload[config.name] = value;
+          }
+        }
+        const collection = viewToCollection.resources;
+        const endpoint = editingRecordId
+          ? `/api/admin/content/${collection}/${encodeURIComponent(editingRecordId)}`
+          : `/api/admin/content/${collection}`;
+        const response = await fetch(endpoint, {
+          method: editingRecordId ? 'PUT' : 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if (!response.ok || result.success !== true) throw new Error(result.message || `Save failed (${response.status}).`);
+        const successMessage = result.message || 'Resource saved.';
+        closeResourceForm();
+        await loadCollection('resources');
+        showResourceNotice(successMessage);
+      } catch (error) {
+        showFormMessage(error.message || 'Could not save resource.', true);
+      } finally {
+        saveResourceButton.disabled = false;
+        saveResourceButton.textContent = editingRecordId ? 'Save changes' : 'Create resource';
+      }
+    });
+
+    function showResourceNotice(text) {
+      const notice = document.getElementById('collection-message');
+      notice.className = 'notice success';
+      notice.textContent = text;
     }
 
     document.querySelectorAll('[data-view]').forEach(button => {
