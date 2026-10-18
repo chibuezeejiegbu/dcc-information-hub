@@ -384,6 +384,237 @@
       }
     }
 
+    
+    const viewToCollection = {
+      'events': 'events',
+      'worship-centres': 'worship_centres',
+      'forms': 'forms',
+      'giving-accounts': 'giving_accounts',
+      'people': 'people',
+      'leadership-assignments': 'leadership_assignments',
+      'departments': 'departments',
+      'resources': 'resources',
+      'schools': 'schools',
+      'long-form-content': 'long_form_content',
+      'external-links': 'external_links'
+    };
+
+    async function loadCollection(view) {
+      const notice = document.getElementById('collection-message');
+      const tbody = document.getElementById('records-body');
+
+      tbody.replaceChildren();
+      notice.className = 'notice';
+      notice.textContent = 'Loading records…';
+
+      const loadingRow = document.createElement('tr');
+      const loadingCell = document.createElement('td');
+      loadingCell.colSpan = 3;
+      loadingCell.textContent = 'Loading…';
+      loadingRow.appendChild(loadingCell);
+      tbody.appendChild(loadingRow);
+
+      try {
+        const collection = viewToCollection[view];
+
+        if (!collection) {
+          throw new Error('Unknown content category.');
+        }
+
+        const response = await fetch(
+          `/api/admin/content/${encodeURIComponent(collection)}`,
+          {
+            credentials: 'same-origin',
+            cache: 'no-store'
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || result.success !== true) {
+          throw new Error(
+            result.message || `Request failed (${response.status}).`
+          );
+        }
+
+        const records = Array.isArray(result.records)
+          ? result.records
+          : [];
+
+        tbody.replaceChildren();
+
+        if (records.length === 0) {
+          const row = document.createElement('tr');
+          const cell = document.createElement('td');
+          cell.colSpan = 3;
+          cell.textContent = 'No records found in this collection.';
+          row.appendChild(cell);
+          tbody.appendChild(row);
+        } else {
+          records.forEach(record => {
+            const row = document.createElement('tr');
+
+            const titleCell = document.createElement('td');
+            titleCell.textContent =
+              record.title ||
+              record.name ||
+              record.event_name ||
+              record.resource_id ||
+              '(Untitled record)';
+
+            const detailsCell = document.createElement('td');
+            detailsCell.textContent = Object.entries(record)
+              .filter(([key, value]) =>
+                key !== '_id' &&
+                value !== null &&
+                value !== undefined &&
+                typeof value !== 'object'
+              )
+              .slice(0, 5)
+              .map(([key, value]) => `${key}: ${value}`)
+              .join(' · ') || 'No additional details';
+
+            const idCell = document.createElement('td');
+            idCell.textContent = String(record._id || record.id || '—');
+
+            row.append(titleCell, detailsCell, idCell);
+            tbody.appendChild(row);
+          });
+        }
+
+        notice.className = 'notice success';
+        notice.textContent = `Loaded ${records.length} record(s).`;
+
+      } catch (error) {
+        tbody.replaceChildren();
+
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 3;
+        cell.textContent = 'Records could not be loaded.';
+        row.appendChild(cell);
+        tbody.appendChild(row);
+
+        notice.className = 'notice error';
+        notice.textContent = error.message || 'Unable to load records.';
+      }
+    }
+
+     const viewToCollection = {
+      'events': 'events',
+      'worship-centres': 'worship_centres',
+      'forms': 'forms',
+      'giving-accounts': 'giving_accounts',
+      'people': 'people',
+      'leadership-assignments': 'leadership_assignments',
+      'departments': 'departments',
+      'resources': 'resources',
+      'schools': 'schools',
+      'long-form-content': 'long_form_content',
+      'external-links': 'external_links'
+    };
+
+    async function loadCollection(view) {
+      const notice = document.getElementById('collection-message');
+      const tbody = document.getElementById('records-body');
+
+      tbody.replaceChildren();
+      notice.className = 'notice';
+      notice.textContent = 'Loading records…';
+
+      const loadingRow = document.createElement('tr');
+      const loadingCell = document.createElement('td');
+      loadingCell.colSpan = 3;
+      loadingCell.textContent = 'Loading…';
+      loadingRow.appendChild(loadingCell);
+      tbody.appendChild(loadingRow);
+
+      try {
+        const collection = viewToCollection[view];
+
+        if (!collection) {
+          throw new Error('Unknown content category.');
+        }
+
+        const response = await fetch(
+          `/api/admin/content/${encodeURIComponent(collection)}`,
+          {
+            credentials: 'same-origin',
+            cache: 'no-store'
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || result.success !== true) {
+          throw new Error(
+            result.message || `Request failed (${response.status}).`
+          );
+        }
+
+        const records = Array.isArray(result.records)
+          ? result.records
+          : [];
+
+        tbody.replaceChildren();
+
+        if (records.length === 0) {
+          const row = document.createElement('tr');
+          const cell = document.createElement('td');
+          cell.colSpan = 3;
+          cell.textContent = 'No records found in this collection.';
+          row.appendChild(cell);
+          tbody.appendChild(row);
+        } else {
+          records.forEach(record => {
+            const row = document.createElement('tr');
+
+            const titleCell = document.createElement('td');
+            titleCell.textContent =
+              record.title ||
+              record.name ||
+              record.event_name ||
+              record.resource_id ||
+              '(Untitled record)';
+
+            const detailsCell = document.createElement('td');
+            detailsCell.textContent = Object.entries(record)
+              .filter(([key, value]) =>
+                key !== '_id' &&
+                value !== null &&
+                value !== undefined &&
+                typeof value !== 'object'
+              )
+              .slice(0, 5)
+              .map(([key, value]) => `${key}: ${value}`)
+              .join(' · ') || 'No additional details';
+
+            const idCell = document.createElement('td');
+            idCell.textContent = String(record._id || record.id || '—');
+
+            row.append(titleCell, detailsCell, idCell);
+            tbody.appendChild(row);
+          });
+        }
+
+        notice.className = 'notice success';
+        notice.textContent = `Loaded ${records.length} record(s).`;
+
+      } catch (error) {
+        tbody.replaceChildren();
+
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 3;
+        cell.textContent = 'Records could not be loaded.';
+        row.appendChild(cell);
+        tbody.appendChild(row);
+
+        notice.className = 'notice error';
+        notice.textContent = error.message || 'Unable to load records.';
+      }
+    }
+
     document.querySelectorAll('[data-view]').forEach(button => {
       button.addEventListener('click', () => {
         document.querySelectorAll('[data-view]').forEach(item => {
@@ -398,14 +629,13 @@
 
         pageTitle.textContent = isOverview
           ? 'Admin overview'
-          : collectionNames[view];
+          : collectionNames[view] || 'Content';
 
         if (!isOverview) {
           document.getElementById('collection-title').textContent =
-            collectionNames[view];
+            collectionNames[view] || 'Content';
 
-          document.getElementById('collection-message').textContent =
-            'This section will be connected to the secure content-management API in the next step.';
+          loadCollection(view);
         }
       });
     });
