@@ -585,7 +585,14 @@
     .hub-menu.dcc-main-menu .hub-option > span:last-child::after { font-size: 10px; }
   }
 
-  </style>
+  
+    /* Database-backed pastor and minister roster cards */
+    .leadership-roster { display:grid; gap:10px; margin-top:12px; }
+    .leadership-card { padding:12px 14px; border:1px solid rgba(255,255,255,.09); border-radius:12px; background:rgba(255,255,255,.035); }
+    .leadership-card-name { color:#f0f1f6; font-size:13px; font-weight:750; line-height:1.45; }
+    .leadership-card-position { margin-top:5px; color:#b9bdd0; font-size:12px; line-height:1.55; }
+    .leadership-card-position strong { color:#a99eff; font-weight:650; }
+</style>
 </head>
 <body>
   <div class="page">
@@ -651,7 +658,7 @@
       <span>Information Hub · Prototype</span>
     </footer>
   </div>
-<script src="dcc-information-hub.js?v=20261009-phase1"></script>
+<script src="dcc-information-hub.js?v=20261018-leadership-cards-v2"></script>
 <script>
 (function () {
   function markMainMenu() {
