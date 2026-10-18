@@ -593,15 +593,36 @@ function givingBankDetails(bankName) {
   addUtilityButtons();
 }
 
-  function parseRoster(kind) {
-    const md = state.data['05-leadership-workforce.md'] || '';
-    const sectionTitle = kind === 'pastors' ? '### Pastors' : '### Ministers';
-    const start = md.indexOf(sectionTitle);
-    if (start < 0) return [];
-    const rest = md.slice(start + sectionTitle.length);
-    const end = rest.search(/^### /m);
-    const block = end >= 0 ? rest.slice(0, end) : rest;
-    return block.split(/\r?\n/).map(l => l.trim()).filter(l => /^\d+\.\s+/.test(l)).map(l => l.replace(/^\d+\.\s+/,''));
+  let peopleRosterCache = null;
+  let leadershipAssignmentsCache = null;
+
+  async function loadPeopleRosterData() {
+    if (peopleRosterCache && leadershipAssignmentsCache) {
+      return { people: peopleRosterCache, assignments: leadershipAssignmentsCache };
+    }
+
+    const [peopleResponse, assignmentsResponse] = await Promise.all([
+      fetch('/api/people', { cache: 'no-store' }),
+      fetch('/api/leadership-assignments', { cache: 'no-store' })
+    ]);
+
+    if (!peopleResponse.ok || !assignmentsResponse.ok) {
+      throw new Error('People or leadership assignments API request failed');
+    }
+
+    const [peopleResult, assignmentsResult] = await Promise.all([
+      peopleResponse.json(),
+      assignmentsResponse.json()
+    ]);
+
+    if (!peopleResult.success || !Array.isArray(peopleResult.people) ||
+        !assignmentsResult.success || !Array.isArray(assignmentsResult.assignments)) {
+      throw new Error('Invalid people or leadership assignments API response');
+    }
+
+    peopleRosterCache = peopleResult.people;
+    leadershipAssignmentsCache = assignmentsResult.assignments;
+    return { people: peopleRosterCache, assignments: leadershipAssignmentsCache };
   }
 
   function leadershipMenu() {
@@ -748,13 +769,44 @@ async function workforceDepartmentDetails(branch, departmentName) {
   addUtilityButtons();
 }
 
-  function rosterView(kind, count = null) {
-    const roster = parseRoster(kind);
-    if (!roster.length) return missing();
-    const shown = count ? roster.slice(0,count) : roster;
+  async function rosterView(kind, count = null) {
     const title = kind === 'pastors' ? 'Pastors' : 'Ministers';
-    addBot(`<strong>${escapeHtml(title)}</strong><div class="md-result"><ol>${shown.map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ol></div>${count ? `<div class="muted-note">Showing ${count} from the official roster.</div>`:''}`);
-    addUtilityButtons();
+    addBot(`<strong>${escapeHtml(title)}</strong><div class="md-result">Loading ${escapeHtml(title.toLowerCase())}…</div>`);
+
+    try {
+      const { people, assignments } = await loadPeopleRosterData();
+      const expectedTitle = kind === 'pastors' ? 'pastor' : 'minister';
+      const roster = people
+        .filter(person => String(person.roster_status || '').toLowerCase() === 'current' &&
+          String(person.ministerial_title || '').toLowerCase() === expectedTitle)
+        .sort((a, b) => String(a.display_name || '').localeCompare(String(b.display_name || '')));
+
+      if (!roster.length) {
+        addBot(`No ${escapeHtml(title.toLowerCase())} are currently listed.`);
+        addUtilityButtons();
+        return;
+      }
+
+      const shown = count ? roster.slice(0, count) : roster;
+      const cards = shown.map(person => {
+        const personAssignments = assignments.filter(item => item.person_id === person.person_id);
+        const positionLines = personAssignments.map(item => {
+          const role = String(item.role || '').trim();
+          const branch = String(item.centre || item.branch || item.scope || '').trim();
+          const position = [role, branch].filter(Boolean).join(' — ');
+          return position ? `<div class="leadership-card-position"><strong>Position:</strong> ${escapeHtml(position)}</div>` : '';
+        }).filter(Boolean).join('');
+
+        return `<article class="leadership-card"><div class="leadership-card-name">${escapeHtml(person.display_name || 'Name not available')}</div>${positionLines}</article>`;
+      }).join('');
+
+      addBot(`<strong>${escapeHtml(title)}</strong><div class="leadership-roster">${cards}</div>${count ? `<div class="muted-note">Showing ${shown.length} of ${roster.length}.</div>` : ''}`);
+      addUtilityButtons();
+    } catch (error) {
+      console.error(`Failed to load ${title.toLowerCase()} roster:`, error);
+      addBot(`Sorry, the ${escapeHtml(title.toLowerCase())} list could not be loaded right now. Please try again shortly.`);
+      addUtilityButtons();
+    }
   }
 
   function leadershipAssignments() {
