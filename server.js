@@ -52,6 +52,17 @@ app.use(session({
     }
 }));
 
+
+app.get('/admin-dashboard.html', (req, res) => {
+    res.set('Cache-Control', 'no-store');
+
+    if (req.session?.adminId !== 'primary') {
+        return res.redirect('/admin.html');
+    }
+
+    return res.sendFile(__dirname + '/admin-dashboard.html');
+});
+  
 app.use(express.static(__dirname));
 
 app.get('/api/test', async (req, res) => {
