@@ -1068,7 +1068,12 @@ async function workforceDepartmentDetails(branch, departmentName) {
   async function resourcesMenu() {
     addBot('<strong>Resources</strong><br>Explore messages and resources to help you grow in the Word of Faith.');
     addMenu([
-      { label: 'Church Resources', action: () => resourceCatalogueMenu() }
+      { label: 'Church Resources', action: () => resourceCatalogueMenu() },
+      { label: 'DCC Schools Website', action: () => resourceLink(
+        'DCC Schools Website',
+        'Visit the official DCC Schools website for more information.',
+        'https://schools.davidschristiancentre.org/'
+      ) }
     ]);
     addUtilityButtons();
   }
