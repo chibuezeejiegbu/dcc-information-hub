@@ -1078,58 +1078,22 @@ async function workforceDepartmentDetails(branch, departmentName) {
     addUtilityButtons();
   }
 
-  const RESOURCE_PRESENTATION = {
-    dcc_sermons: {
-      label: 'Sermons',
-      description: 'Explore sermons and messages from DCC.',
-      buttonLabel: 'View Sermons'
-    },
-    dcc_audio_messages: {
-      label: 'Audio Messages',
-      description: 'Click here to listen to audio messages and ministrations from our pastors, ministers, and guest ministers.',
-      buttonLabel: 'Listen to Audio Messages'
-    },
-    dcc_podcast: {
-      label: 'Bible Before Breakfast',
-      description: 'Listen to Bible Before Breakfast by Pastor Mildred Okonkwo. New episodes every week.',
-      buttonLabel: 'Listen to Bible Before Breakfast'
-    },
-    dcc_devotional: {
-      label: 'Devotional',
-      description: 'Spend a little time in the Word with our devotionals.',
-      buttonLabel: 'View Devotionals'
-    },
-    dcc_online_app: {
-      label: 'Online App',
-      description: 'Listen to the word of faith and live a life of 100% victory 100% of the time.',
-      buttonLabel: 'Download DCC Online App'
-    },
-    dcc_soundcloud: {
-      label: 'SoundCloud',
-      description: 'Listen to all our sermons on SoundCloud.',
-      buttonLabel: 'Listen on SoundCloud'
-    }
-  };
-
   async function resourceCatalogueMenu() {
     try {
       const { resources } = await loadSchoolsAndResources();
       const visibleResources = resources
-        .filter(resource => RESOURCE_PRESENTATION[resource.resource_id])
-        .map(resource => ({
-          ...resource,
-          presentation: RESOURCE_PRESENTATION[resource.resource_id]
-        }))
+        .filter(resource => resource.is_active !== false)
         .sort((a, b) => {
-          const order = ['dcc_sermons', 'dcc_audio_messages', 'dcc_podcast', 'dcc_devotional', 'dcc_online_app', 'dcc_soundcloud'];
-          return order.indexOf(a.resource_id) - order.indexOf(b.resource_id);
+          const orderA = Number.isFinite(Number(a.display_order)) ? Number(a.display_order) : Number.MAX_SAFE_INTEGER;
+          const orderB = Number.isFinite(Number(b.display_order)) ? Number(b.display_order) : Number.MAX_SAFE_INTEGER;
+          return orderA - orderB || String(a.title).localeCompare(String(b.title));
         });
 
       if (!visibleResources.length) throw new Error('No church resource records are available');
 
       addBot('<strong>Church Resources</strong><br>Choose a resource to explore.');
       addMenu(visibleResources.map(resource => ({
-        label: resource.presentation.label,
+        label: resource.title,
         action: () => resourceDetails(resource.resource_id)
       })));
       addUtilityButtons();
@@ -1143,16 +1107,14 @@ async function workforceDepartmentDetails(branch, departmentName) {
   async function resourceDetails(resourceId) {
     try {
       const { resources } = await loadSchoolsAndResources();
-      const resource = resources.find(item => item.resource_id === resourceId);
-      const presentation = RESOURCE_PRESENTATION[resourceId];
-      if (!resource || !presentation) return missing();
+      const resource = resources.find(item => item.resource_id === resourceId && item.is_active !== false);
+      if (!resource) return missing();
 
-      const description = presentation.description;
-      const buttonLabel = presentation.buttonLabel;
-      let html = `<strong>${escapeHtml(presentation.label)}</strong>`;
-      if (description) {
-        html += `<div class="md-result">${escapeHtml(description)}</div>`;
+      let html = `<strong>${escapeHtml(resource.title)}</strong>`;
+      if (resource.description) {
+        html += `<div class="md-result">${escapeHtml(resource.description)}</div>`;
       }
+      const buttonLabel = resource.button_label || `Open ${resource.title}`;
       html += `<div class="link-row">${link(buttonLabel, resource.url)}</div>`;
       addBot(html);
       addUtilityButtons();
