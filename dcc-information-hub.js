@@ -771,8 +771,6 @@ async function workforceDepartmentDetails(branch, departmentName) {
 
   async function rosterView(kind, count = null) {
     const title = kind === 'pastors' ? 'Pastors' : 'Ministers';
-    addBot(`<strong>${escapeHtml(title)}</strong><div class="md-result">Loading ${escapeHtml(title.toLowerCase())}…</div>`);
-
     try {
       const { people, assignments } = await loadPeopleRosterData();
       const expectedTitle = kind === 'pastors' ? 'pastor' : 'minister';
@@ -797,7 +795,7 @@ async function workforceDepartmentDetails(branch, departmentName) {
           return position ? `<div class="leadership-card-position"><strong>Position:</strong> ${escapeHtml(position)}</div>` : '';
         }).filter(Boolean).join('');
 
-        return `<article class="leadership-card"><div class="leadership-card-name">${escapeHtml(person.display_name || 'Name not available')}</div>${positionLines}</article>`;
+        return `<article class="leadership-card"><div class="leadership-card-name">${escapeHtml(kind === 'pastors' ? 'Pastor' : 'Minister')} ${escapeHtml(person.display_name || 'Name not available')}</div>${positionLines}</article>`;
       }).join('');
 
       addBot(`<strong>${escapeHtml(title)}</strong><div class="leadership-roster">${cards}</div>${count ? `<div class="muted-note">Showing ${shown.length} of ${roster.length}.</div>` : ''}`);
