@@ -1028,23 +1028,138 @@ async function workforceDepartmentDetails(branch, departmentName) {
     addUtilityButtons();
   }
 
-  function resourcesMenu() {
-    addBot('<strong>DCC Schools / Resources</strong><br>Choose a resource.');
+  let schoolsCache = null;
+  let resourcesCache = null;
+
+  async function loadSchoolsAndResources() {
+    if (Array.isArray(schoolsCache) && Array.isArray(resourcesCache)) {
+      return { schools: schoolsCache, resources: resourcesCache };
+    }
+
+    const [schoolsResponse, resourcesResponse] = await Promise.all([
+      fetch('/api/schools', { cache: 'no-store' }),
+      fetch('/api/resources', { cache: 'no-store' })
+    ]);
+
+    if (!schoolsResponse.ok || !resourcesResponse.ok) {
+      throw new Error('Schools or resources API request failed');
+    }
+
+    const [schoolsResult, resourcesResult] = await Promise.all([
+      schoolsResponse.json(),
+      resourcesResponse.json()
+    ]);
+
+    if (!schoolsResult.success || !Array.isArray(schoolsResult.schools) ||
+        !resourcesResult.success || !Array.isArray(resourcesResult.resources)) {
+      throw new Error('Invalid schools or resources API response');
+    }
+
+    schoolsCache = schoolsResult.schools
+      .filter(school => school && school.name)
+      .sort((a, b) => String(a.name).localeCompare(String(b.name)));
+    resourcesCache = resourcesResult.resources
+      .filter(resource => resource && resource.title && resource.url)
+      .sort((a, b) => String(a.title).localeCompare(String(b.title)));
+
+    return { schools: schoolsCache, resources: resourcesCache };
+  }
+
+  async function resourcesMenu() {
+    addBot('<strong>DCC Schools / Resources</strong><br>Choose what you would like to explore.');
     addMenu([
-      {label:'Audio Messages', action:() => resourceLink('Audio Messages','Click here to listen to audio messages and ministrations from our pastors, ministers, and guest ministers.','https://www.davidschristiancentre.org/resources/audio-messages')},
-      {label:'Podcast', action:() => resourceLink('Podcast','Click here to listen to our podcasts.','https://www.davidschristiancentre.org/resources/podcasts')},
-      {label:'Devotional', action:() => resourceLink('Devotional','Click here to listen to our devotionals.','https://www.davidschristiancentre.org/resources/devotional')},
-      {label:'DCC Online App', action:() => resourceLink('DCC Online App','Click here to download the DCC Online mobile application. Available on Google Play and the Apple App Store.','https://www.davidschristiancentre.org/resources/download-app')},
-      {label:'DCC Schools Website', action:() => resourceLink('DCC Schools Website','Click here to visit the DCC Schools Website.','https://schools.davidschristiancentre.org/')}
+      { label: 'DCC Schools', action: () => schoolsMenu() },
+      { label: 'DCC Resources', action: () => resourceCatalogueMenu() },
+      { label: 'DCC Schools Website', action: () => resourceLink(
+        'DCC Schools Website',
+        'Visit the official DCC Schools website for more information.',
+        'https://schools.davidschristiancentre.org/'
+      ) }
     ]);
     addUtilityButtons();
   }
 
-  function schoolDetails(title) {
-    const sec = findSection('06-schools-resources.md', title);
-    if (!sec) return missing();
-    addBot(`<strong>${escapeHtml(title)}</strong><div class="md-result">${formatLines(sectionText(sec))}</div><div class="link-row">${link('Open DCC Schools','https://schools.davidschristiancentre.org/')}</div>`);
-    addUtilityButtons();
+  async function schoolsMenu() {
+    try {
+      const { schools } = await loadSchoolsAndResources();
+      if (!schools.length) throw new Error('No school records are available');
+
+      addBot('<strong>DCC Schools</strong><br>Select a school to learn more.');
+      addMenu(schools.map(school => ({
+        label: school.name,
+        action: () => schoolDetails(school.school_id)
+      })));
+      addUtilityButtons();
+    } catch (error) {
+      console.error('Could not load DCC schools:', error);
+      addBot('<strong>DCC Schools information is currently unavailable.</strong><br>Please try again later or visit the official DCC Schools website.');
+      addBot(`<div class="link-row">${link('Open DCC Schools', 'https://schools.davidschristiancentre.org/')}</div>`);
+      addUtilityButtons();
+    }
+  }
+
+  async function schoolDetails(schoolId) {
+    try {
+      const { schools } = await loadSchoolsAndResources();
+      const school = schools.find(item => item.school_id === schoolId);
+      if (!school) return missing();
+
+      let html = `<strong>${escapeHtml(school.name)}</strong>`;
+      if (school.level_type) {
+        html += `<div class="md-result"><strong>School type:</strong> ${escapeHtml(school.level_type)}</div>`;
+      }
+      if (school.description) {
+        html += `<div class="md-result">${escapeHtml(school.description)}</div>`;
+      }
+      if (Array.isArray(school.values) && school.values.length) {
+        html += `<div class="md-result"><strong>Values</strong><ul>${school.values.map(value => `<li>${escapeHtml(value)}</li>`).join('')}</ul></div>`;
+      }
+      html += `<div class="link-row">${link('Open DCC Schools', 'https://schools.davidschristiancentre.org/')}</div>`;
+      addBot(html);
+      addUtilityButtons();
+    } catch (error) {
+      console.error('Could not load school details:', error);
+      addBot('<strong>School information is currently unavailable.</strong><br>Please try again later.');
+      addUtilityButtons();
+    }
+  }
+
+  async function resourceCatalogueMenu() {
+    try {
+      const { resources } = await loadSchoolsAndResources();
+      if (!resources.length) throw new Error('No resource records are available');
+
+      addBot('<strong>DCC Resources</strong><br>Select a resource to view its description and official link.');
+      addMenu(resources.map(resource => ({
+        label: resource.title,
+        action: () => resourceDetails(resource.resource_id)
+      })));
+      addUtilityButtons();
+    } catch (error) {
+      console.error('Could not load DCC resources:', error);
+      addBot('<strong>DCC resources are currently unavailable.</strong><br>Please try again later or visit the official DCC website.');
+      addUtilityButtons();
+    }
+  }
+
+  async function resourceDetails(resourceId) {
+    try {
+      const { resources } = await loadSchoolsAndResources();
+      const resource = resources.find(item => item.resource_id === resourceId);
+      if (!resource) return missing();
+
+      let html = `<strong>${escapeHtml(resource.title)}</strong>`;
+      if (resource.description) {
+        html += `<div class="md-result">${escapeHtml(resource.description)}</div>`;
+      }
+      html += `<div class="link-row">${link(`Open ${resource.title}`, resource.url)}</div>`;
+      addBot(html);
+      addUtilityButtons();
+    } catch (error) {
+      console.error('Could not load resource details:', error);
+      addBot('<strong>Resource information is currently unavailable.</strong><br>Please try again later.');
+      addUtilityButtons();
+    }
   }
 
   function resourceLink(title, description, url) {
