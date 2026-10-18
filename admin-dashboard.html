@@ -1,0 +1,438 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>DCC Information Hub | Admin</title>
+  <style>
+    :root {
+      --navy: #172b4d;
+      --blue: #315efb;
+      --bg: #f5f7fb;
+      --text: #202b3c;
+      --muted: #718096;
+      --border: #e4e9f1;
+      --white: #fff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    button, input, select, textarea { font: inherit; }
+
+    button { cursor: pointer; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 245px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    aside {
+      background: var(--navy);
+      color: white;
+      padding: 28px 18px;
+    }
+
+    .brand {
+      padding: 0 12px 28px;
+      border-bottom: 1px solid #344766;
+    }
+
+    .brand small {
+      display: block;
+      color: #b9c8e2;
+      margin-top: 8px;
+    }
+
+    .nav-label {
+      margin: 26px 12px 10px;
+      color: #a9bad6;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.3px;
+      text-transform: uppercase;
+    }
+
+    .nav-item {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin: 4px 0;
+      text-align: left;
+      color: #e2e9f5;
+      background: transparent;
+      border: 0;
+      border-radius: 8px;
+    }
+
+    .nav-item:hover, .nav-item.active {
+      background: #2b4164;
+      color: white;
+    }
+
+    main { min-width: 0; }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 22px 32px;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+    }
+
+    header p { margin: 5px 0 0; color: var(--muted); }
+
+    .content { padding: 32px; max-width: 1400px; }
+
+    h1 { font-size: 25px; margin: 0; }
+    h2 { font-size: 18px; margin: 0 0 8px; }
+    p { line-height: 1.5; }
+
+    .muted { color: var(--muted); }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 30px;
+      background: #eef2f7;
+      color: #526176;
+      font-size: 12px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #9aa8bb;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin: 25px 0;
+    }
+
+    .card, .panel {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px;
+    }
+
+    .card p { margin: 0; color: var(--muted); font-size: 13px; }
+    .metric { font-size: 30px; font-weight: 700; margin-top: 12px; }
+
+    .panel { margin-top: 20px; }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .button {
+      padding: 10px 15px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: white;
+      color: var(--text);
+    }
+
+    .button.primary {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: white;
+    }
+
+    .button:disabled { opacity: .55; cursor: not-allowed; }
+
+    .notice {
+      padding: 14px 16px;
+      border-radius: 8px;
+      background: #f0f4ff;
+      color: #2845a3;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .notice.error { background: #fff0f0; color: #a32626; }
+    .notice.success { background: #eaf8ef; color: #176b3a; }
+
+    .section-title { margin-bottom: 8px; }
+    .section-description { color: var(--muted); margin-top: 0; }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 14px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 800px) {
+      .layout { grid-template-columns: 1fr; }
+      aside { padding: 18px; }
+      .nav-label { margin-top: 18px; }
+      .nav-list { display: flex; gap: 6px; overflow-x: auto; }
+      .nav-item { min-width: max-content; width: auto; }
+      .cards { grid-template-columns: 1fr; }
+      .content { padding: 20px; }
+      header { padding: 18px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside>
+      <div class="brand">
+        <strong>DCC INFORMATION HUB</strong>
+        <small>Content administration</small>
+      </div>
+
+      <div class="nav-label">Workspace</div>
+      <div class="nav-list">
+        <button class="nav-item active" data-view="overview">Overview</button>
+      </div>
+
+      <div class="nav-label">Content management</div>
+      <div class="nav-list">
+        <button class="nav-item" data-view="events">Events</button>
+        <button class="nav-item" data-view="worship-centres">Worship centres</button>
+        <button class="nav-item" data-view="forms">Forms</button>
+        <button class="nav-item" data-view="giving-accounts">Giving accounts</button>
+        <button class="nav-item" data-view="people">People</button>
+        <button class="nav-item" data-view="leadership-assignments">Leadership</button>
+        <button class="nav-item" data-view="departments">Departments</button>
+        <button class="nav-item" data-view="resources">Resources</button>
+        <button class="nav-item" data-view="schools">Schools</button>
+        <button class="nav-item" data-view="long-form-content">Long-form content</button>
+        <button class="nav-item" data-view="external-links">External links</button>
+      </div>
+    </aside>
+
+    <main>
+      <header>
+        <div>
+          <h1 id="page-title">Admin overview</h1>
+          <p>DCC Information Hub content workspace</p>
+        </div>
+        <button class="button" id="logout-button">Log out</button>
+      </header>
+
+      <div class="content">
+        <div id="message" class="notice" role="status">
+          Checking your administrator session…
+        </div>
+
+        <section id="overview">
+          <h2 class="section-title">Welcome to your workspace</h2>
+          <p class="section-description">
+            Manage the information presented through the DCC Information Hub.
+          </p>
+
+          <div class="cards">
+            <div class="card">
+              <p>Content collections</p>
+              <div class="metric">11</div>
+              <p>Available content areas</p>
+            </div>
+            <div class="card">
+              <p>Administrator access</p>
+              <div class="metric" style="font-size:22px">Protected</div>
+              <p>Session-based authentication</p>
+            </div>
+            <div class="card">
+              <p>Database connection</p>
+              <div class="metric" style="font-size:22px" id="connection-status">Checking…</div>
+              <p>Development environment</p>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>Getting started</h2>
+            <p class="muted">
+              Select a content category from the sidebar to manage its records.
+              Content editing will be enabled after the authenticated management
+              API is installed and tested.
+            </p>
+          </div>
+        </section>
+
+        <section id="collection-view" class="hidden">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2 id="collection-title">Content</h2>
+                <p class="muted" id="collection-description">
+                  Content records for this category.
+                </p>
+              </div>
+              <button class="button primary" id="add-button" disabled>
+                + Add record
+              </button>
+            </div>
+
+            <div id="collection-message" class="notice">
+              The secure content-management API will be connected in the next step.
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Record</th>
+                    <th>Details</th>
+                    <th>Record ID</th>
+                  </tr>
+                </thead>
+                <tbody id="records-body">
+                  <tr><td colspan="3">No records loaded.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const message = document.getElementById('message');
+    const connectionStatus = document.getElementById('connection-status');
+    const overview = document.getElementById('overview');
+    const collectionView = document.getElementById('collection-view');
+    const pageTitle = document.getElementById('page-title');
+
+    const collectionNames = {
+      'events': 'Events',
+      'worship-centres': 'Worship centres',
+      'forms': 'Forms',
+      'giving-accounts': 'Giving accounts',
+      'people': 'People',
+      'leadership-assignments': 'Leadership assignments',
+      'departments': 'Departments',
+      'resources': 'Resources',
+      'schools': 'Schools',
+      'long-form-content': 'Long-form content',
+      'external-links': 'External links'
+    };
+
+    async function checkSession() {
+      try {
+        const response = await fetch('/api/admin/me', {
+          credentials: 'same-origin',
+          cache: 'no-store'
+        });
+
+        if (response.status === 401) {
+          window.location.replace('/admin.html');
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error('Could not verify your administrator session.');
+        }
+
+        const result = await response.json();
+
+        if (!result.authenticated) {
+          window.location.replace('/admin.html');
+          return;
+        }
+
+        message.textContent = 'You are signed in. Administrator session verified.';
+        message.className = 'notice success';
+
+        connectionStatus.textContent = 'Session active';
+      } catch (error) {
+        message.textContent =
+          'Could not verify the session. Refresh the page or sign in again.';
+        message.className = 'notice error';
+        connectionStatus.textContent = 'Unverified';
+      }
+    }
+
+    document.querySelectorAll('[data-view]').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('[data-view]').forEach(item => {
+          item.classList.toggle('active', item === button);
+        });
+
+        const view = button.dataset.view;
+        const isOverview = view === 'overview';
+
+        overview.classList.toggle('hidden', !isOverview);
+        collectionView.classList.toggle('hidden', isOverview);
+
+        pageTitle.textContent = isOverview
+          ? 'Admin overview'
+          : collectionNames[view];
+
+        if (!isOverview) {
+          document.getElementById('collection-title').textContent =
+            collectionNames[view];
+
+          document.getElementById('collection-message').textContent =
+            'This section will be connected to the secure content-management API in the next step.';
+        }
+      });
+    });
+
+    document.getElementById('logout-button').addEventListener('click', async () => {
+      const button = document.getElementById('logout-button');
+      button.disabled = true;
+
+      try {
+        const response = await fetch('/api/admin/logout', {
+          method: 'POST',
+          credentials: 'same-origin'
+        });
+
+        if (!response.ok) {
+          throw new Error('Logout failed.');
+        }
+
+        window.location.replace('/admin.html');
+      } catch (error) {
+        message.textContent = 'Logout failed. Please try again.';
+        message.className = 'notice error';
+        button.disabled = false;
+      }
+    });
+
+    checkSession();
+  </script>
+</body>
+</html>
