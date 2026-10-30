@@ -1,1568 +1,679 @@
-/* DCC Information Hub — Version 1
- * Deterministic JavaScript/Markdown prototype. No AI API.
- * HTML = presentation | CSS = existing design | JS = interaction | MD = source of truth
- */
-(() => {
-  'use strict';
-
-  const CONFIG = {
-    dataFiles: [
-      '01-faqs-identity.md',
-      '02-events-calendar.md',
-      '03-forms-registration.md',
-      '04-ministries-fellowships-interest-groups.md',
-      '05-leadership-workforce.md',
-      '06-schools-resources.md',
-      '07-external-ecosystem-socials.md'
-    ],
-    eventsUrl: 'https://www.davidschristiancentre.org/events',
-    sermonsUrl: 'https://www.davidschristiancentre.org/resources/sermons/victory-celebrations',
-    mainSite: 'https://www.davidschristiancentre.org/'
-  };
-
-  const state = {
-  history: [],
-  stack: [],
-  isMainMenu: false,
-  data: {},
-  events: [],
-  worshipCentres: [],
-  forms: [],
-  ready: false,
-  loading: true,
-  awaitingWhatsApp: false,
-  sessionId: crypto.randomUUID(),
-  currentContext: null
-};
-
-  const els = {
-    body: document.body,
-    chat: document.querySelector('.chat-body'),
-    input: document.querySelector('.input-box input'),
-    send: document.querySelector('.send'),
-    quickStart: document.querySelector('.quick-start'),
-    status: document.querySelector('.bot-status'),
-    privacy: document.querySelector('.privacy')
-  };
-
-  function escapeHtml(value = '') {
-    return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DCC Information Hub</title>
+<style>
+  :root {
+    --navy: #080b1c;
+    --navy-2: #0e1229;
+    --navy-3: #151a36;
+    --purple: #7667d9;
+    --purple-light: #9b8df0;
+    --white: #ffffff;
+    --muted: #a8aec7;
+    --line: rgba(255,255,255,.10);
+    --glass: rgba(255,255,255,.055);
   }
 
-  function cleanMarkdown(md) {
-    return md
-      .replace(/^---\s*$/gm, '')
-      .replace(/\*\*(.*?)\*\*/g, '$1')
-      .replace(/\[(.*?)\]\((.*?)\)/g, '$1')
-      .replace(/`([^`]+)`/g, '$1')
-      .replace(/^\s*[-*]\s+/gm, '• ')
-      .replace(/^\s*\d+\.\s+/gm, '')
-      .replace(/\s+$/gm, '')
-      .trim();
+  * { box-sizing: border-box; }
+
+  html, body { margin: 0; min-height: 100%; }
+
+  body {
+    font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--white);
+    background:
+      radial-gradient(circle at 82% 10%, rgba(118,103,217,.18), transparent 32%),
+      radial-gradient(circle at 10% 80%, rgba(74,86,170,.12), transparent 28%),
+      linear-gradient(145deg, #050713 0%, var(--navy) 48%, #0b1024 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
   }
 
-  function parseSections(md) {
-    const lines = md.split(/\r?\n/);
-    const sections = [];
-    let current = null;
-    for (const line of lines) {
-      const match = line.match(/^(#{1,6})\s+(.+?)\s*$/);
-      if (match) {
-        if (current) sections.push(current);
-        current = { level: match[1].length, title: match[2].trim(), lines: [] };
-      } else if (current) {
-        current.lines.push(line);
-      }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,.7), transparent 85%);
+  }
+
+  .page {
+    width: min(1180px, calc(100% - 40px));
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    height: 88px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 2;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    text-decoration: none;
+    color: white;
+  }
+
+  .brand img {
+    width: 45px;
+    height: 45px;
+    object-fit: contain;
+  }
+
+  .brand-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .brand-name {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+
+  .brand-sub {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #e8e9f2;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .prototype {
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,.045);
+    color: var(--muted);
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 10px;
+    letter-spacing: .08em;
+  }
+
+  main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: .82fr 1.18fr;
+    gap: 52px;
+    align-items: center;
+    padding: 34px 0 58px;
+  }
+
+  .intro {
+    max-width: 470px;
+    padding-bottom: 28px;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #c6c1ff;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 26px;
+    height: 1px;
+    background: var(--purple-light);
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(42px, 5vw, 68px);
+    line-height: .98;
+    letter-spacing: -.045em;
+    font-weight: 750;
+  }
+
+  .accent { color: #a99eff; }
+
+  .intro p {
+    color: #b9bdd0;
+    font-size: 16px;
+    line-height: 1.7;
+    margin: 24px 0 0;
+    max-width: 430px;
+  }
+
+  .topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 25px;
+  }
+
+  .topic {
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,.035);
+    color: #d8dae5;
+    border-radius: 999px;
+    padding: 9px 13px;
+    font-size: 12px;
+  }
+
+  .chat-shell {
+    width: 100%;
+    max-width: 640px;
+    justify-self: end;
+    background: rgba(11,15,36,.84);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 26px;
+    box-shadow: 0 30px 90px rgba(0,0,0,.42), 0 0 0 1px rgba(118,103,217,.04);
+    backdrop-filter: blur(20px);
+    overflow: hidden;
+  }
+
+  .chat-head {
+    min-height: 70px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+    background: rgba(255,255,255,.025);
+  }
+
+  .bot-id {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+  }
+
+  .bot-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(145deg, #8d7ef0, #5f53b7);
+    box-shadow: 0 8px 20px rgba(101,88,202,.25);
+    font-weight: 900;
+    font-size: 15px;
+  }
+
+  .bot-name {
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .bot-status {
+    margin-top: 3px;
+    color: #9298b2;
+    font-size: 10px;
+  }
+
+  .online {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #72d6a3;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+
+  .chat-body {
+    min-height: 410px;
+    padding: 25px 22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 17px;
+  }
+
+  .welcome {
+    align-self: flex-start;
+    max-width: 92%;
+  }
+
+  .welcome-label {
+    color: #888ea8;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin: 0 0 7px 5px;
+  }
+
+  .message {
+    background: #171c38;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 17px 17px 17px 5px;
+    padding: 16px 17px;
+    color: #e5e7ef;
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  .message strong { color: white; }
+
+  .quick-start {
+    margin-top: 13px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .quick {
+    text-align: left;
+    border: 1px solid rgba(255,255,255,.09);
+    background: rgba(255,255,255,.025);
+    color: #cfd2df;
+    border-radius: 12px;
+    padding: 11px 12px;
+    font-size: 11px;
+  }
+
+  .quick span {
+    display: block;
+    color: #8f87e7;
+    font-size: 13px;
+    margin-bottom: 3px;
+  }
+
+  .input-wrap {
+    padding: 15px;
+    border-top: 1px solid var(--line);
+    background: rgba(3,5,15,.35);
+  }
+
+  .input-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 8px 7px 16px;
+    background: #151a34;
+    border: 1px solid rgba(255,255,255,.11);
+    border-radius: 16px;
+  }
+
+  .input-box input {
+    min-width: 0;
+    flex: 1;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: white;
+    font: inherit;
+    font-size: 13px;
+  }
+
+  .input-box input::placeholder { color: #707690; }
+
+  .send {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    border: 0;
+    border-radius: 12px;
+    background: linear-gradient(145deg, #8879eb, #6154bd);
+    color: white;
+    display: grid;
+    place-items: center;
+    font-size: 17px;
+  }
+
+  .privacy {
+    text-align: center;
+    color: #646b86;
+    font-size: 9px;
+    margin: 9px 0 1px;
+  }
+
+  footer {
+    padding: 0 0 25px;
+    color: #60677e;
+    font-size: 10px;
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+  }
+
+  @media (max-width: 860px) {
+    .page { width: min(100% - 28px, 650px); }
+    header { height: 74px; }
+    .header-title { display: none; }
+    main {
+      grid-template-columns: 1fr;
+      gap: 28px;
+      padding-top: 25px;
     }
-    if (current) sections.push(current);
-    return sections;
-  }
-
-  function findSection(file, title) {
-    const sections = parseSections(state.data[file] || '');
-    const wanted = title.toLowerCase();
-    return sections.find(s => s.title.toLowerCase() === wanted) ||
-      sections.find(s => s.title.toLowerCase().includes(wanted));
-  }
-
-  function sectionText(section) {
-    return section ? cleanMarkdown(section.lines.join('\n')) : '';
-  }
-
-  function allText() {
-    return Object.entries(state.data).map(([file, md]) => ({ file, text: cleanMarkdown(md) }));
-  }
-
-  function link(label, url) {
-    return `<a class="hub-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
-  }
-
-  function addBot(html, label = 'Information Hub') {
-    const wrap = document.createElement('div');
-    wrap.className = 'hub-entry bot-entry';
-    wrap.innerHTML = `<div class="welcome-label">${escapeHtml(label)}</div><div class="message">${html}</div>`;
-    els.chat.appendChild(wrap);
-    scrollChat();
-  }
-
-  function addUser(text) {
-    const wrap = document.createElement('div');
-    wrap.className = 'hub-entry user-entry';
-    wrap.innerHTML = `<div class="user-message">${escapeHtml(text)}</div>`;
-    els.chat.appendChild(wrap);
-    scrollChat();
-  }
-
-  function scrollChat() {
-    els.chat.scrollTop = els.chat.scrollHeight;
-  }
-
-  function addMenu(items, options = {}) {
-  const box = document.createElement('div');
-  box.className = 'hub-menu';
-
-  if (options.title) {
-    const title = document.createElement('div');
-    title.className = 'hub-menu-title';
-    title.textContent = options.title;
-    box.appendChild(title);
-  }
-
-  items.forEach((item, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'hub-option';
-    btn.type = 'button';
-    btn.innerHTML =
-      `<span class="hub-number">${i + 1}</span><span>${escapeHtml(item.label)}</span>`;
-
-    btn.addEventListener('click', () => {
-
-      // Only save the current screen when moving deeper
-      // from an existing submenu/result screen.
-      if (!state.isMainMenu) {
-        state.stack.push({
-          nodes: Array.from(els.chat.children),
-          isMainMenu: state.isMainMenu
-        });
-      }
-
-      els.chat.innerHTML = '';
-      state.isMainMenu = false;
-      state.currentContext = item.label;
-
-      item.action();
-    });
-
-    box.appendChild(btn);
-  });
-
-  els.chat.appendChild(box);
-  scrollChat();
-}
-
-async function recordContactEvent(entryPoint, context = null) {
-  try {
-    const res = await fetch('/api/contact-events', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        session_id: state.sessionId,
-        entry_point: entryPoint,
-        context: context
-      })
-    });
-
-    const result = await res.json();
-
-    if (!result.success) {
-      console.error('Contact event was not recorded:', result);
-    } else {
-      console.log('Contact event recorded:', result);
+    .intro {
+      max-width: 620px;
+      padding-bottom: 0;
     }
-
-  } catch (error) {
-    console.error('Could not record contact event:', error);
-  }
-}
-
-  function addUtilityButtons(options = {}) {
-  const box = document.createElement('div');
-  box.className = 'hub-utility';
-
-  const buttons = [
-    ['← Back', goBack]
-  ];
-
-  // Only show Main menu when Back has a previous submenu
-  // to return to.
-  if (state.stack.length > 0) {
-    buttons.push(['⌂ Main menu', showMainMenu]);
-  }
-
-  // Dedicated Contact the Team screens can hide this button.
-  if (options.showContact !== false) {
-    buttons.push([
-      'Contact Our Team',
-      () => {
-        state.stack.push({
-          nodes: Array.from(els.chat.children),
-          isMainMenu: state.isMainMenu
-        });
-
-        els.chat.innerHTML = '';
-        state.isMainMenu = false;
-
-        recordContactEvent('contextual', state.currentContext);
-        help(false);
-      }
-    ]);
-  }
-
-  buttons.forEach(([label, fn]) => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'hub-utility-btn';
-    b.textContent = label;
-    b.addEventListener('click', fn);
-    box.appendChild(b);
-  });
-
-  els.chat.appendChild(box);
-}
-
-  function navigate(label, action) {
-  state.stack.push(Array.from(els.chat.children));
-
-  els.chat.innerHTML = '';
-  addUser(label);
-  action();
-}
-
-  function showMainMenu() {
-  els.chat.innerHTML = '';
-  state.stack = [];
-  state.isMainMenu = true;
-
-  addBot('<strong>Welcome! Please choose an option below to get started.</strong>');
-
-  addMenu([
-    {label:'Church Information / Services', action:() => churchMenu()},
-    {label:'Upcoming Events', action:() => eventsMenu()},
-    {label:'Sermons & Media', action:() => sermonsMenu()},
-    {label:'Forms & Registration', action:() => formsMenu()},
-    {label:'Giving', action:() => giving()},
-    {label:'Pastors & Ministers / Workforce Leaders', action:() => leadershipMenu()},
-    {label:'Resources', action:() => resourcesMenu()},
-    {
-  label:'Contact the Team',
-  action:() => {
-    recordContactEvent('main_menu', null);
-    help(true);
-  }
-}
-  ]);
-}
-
-  function restart() {
-    els.chat.innerHTML = '';
-    state.stack = [];
-state.currentContext = null;
-    state.history = [];
-    showMainMenu();
-  }
-
-  function goBack() {
-  if (state.stack.length === 0) {
-    showMainMenu();
-    return;
-  }
-
-  const previousScreen = state.stack.pop();
-
-  els.chat.innerHTML = '';
-
-  previousScreen.nodes.forEach(node => {
-    els.chat.appendChild(node);
-  });
-
-  state.isMainMenu = previousScreen.isMainMenu;
-
-  scrollChat();
-}
-
-  function faqSection(title) {
-    return findSection('01-faqs-identity.md', title);
-  }
-
-  function churchMenu() {
-    addBot('<strong>Church Information & Services</strong><br>What would you like to find out?');
-    addMenu([
-      {label:'Mainland — Victory Dome', action:() => branchDetails('Mainland — Victory Dome')},
-      {label:'Island — DCC Lekki', action:() => branchDetails('Island — DCC Lekki')},
-      {label:'About DCC', action:() => aboutDcc()}
-    ]);
-    addUtilityButtons();
-  }
-
-  function branchDetails(which) {
-  const isMainland = which.includes('Mainland');
-
-  const centre = state.worshipCentres.find(c => {
-    if (isMainland) {
-      return c.name === 'DCC Mainland (Victory Dome)';
+    h1 { font-size: clamp(40px, 12vw, 58px); }
+    .intro p { font-size: 14px; }
+    .chat-shell {
+      justify-self: stretch;
+      max-width: none;
     }
-
-    return c.name === 'DCC Island (DCC Lekki)';
-  });
-
-  if (!centre) {
-    addBot('<strong>Branch information unavailable.</strong><br>I could not find this worship centre in the DCC Information Hub database.');
-    addUtilityButtons();
-    return;
+    .chat-body { min-height: 350px; }
+    footer { padding-top: 8px; }
   }
 
-  let html = `<strong>${escapeHtml(centre.name)}</strong>`;
-
-  if (centre.address) {
-    html += `<div class="md-result"><strong>Address:</strong><br>${escapeHtml(centre.address)}</div>`;
+  @media (max-width: 480px) {
+    .page { width: calc(100% - 22px); }
+    .brand img { width: 38px; height: 38px; }
+    .brand-copy { display: none; }
+    main { padding-top: 16px; padding-bottom: 32px; }
+    .eyebrow { margin-bottom: 14px; }
+    h1 { font-size: 42px; }
+    .topics { display: none; }
+    .chat-shell { border-radius: 20px; }
+    .chat-head { padding: 13px 15px; }
+    .chat-body { min-height: 340px; padding: 20px 15px; }
+    .quick-start { grid-template-columns: 1fr; }
+    .input-wrap { padding: 11px; }
+    footer { flex-direction: column; }
   }
+</style>
 
-  if (Array.isArray(centre.phones) && centre.phones.length) {
-    html += `<div class="md-result"><strong>Phone:</strong> ${centre.phones.map(escapeHtml).join(' / ')}</div>`;
-  }
-
-  if (Array.isArray(centre.services) && centre.services.length) {
-    html += `<div class="md-result"><strong>Service Times</strong><br>`;
-
-    centre.services.forEach(service => {
-      const formatServiceTime = (timeValue) => {
-  if (!timeValue) return '';
-
-  const [hour, minute] = timeValue.split(':').map(Number);
-  const period = hour >= 12 ? 'PM' : 'AM';
-  const displayHour = hour % 12 || 12;
-
-  return minute === 0
-    ? `${displayHour} ${period}`
-    : `${displayHour}:${String(minute).padStart(2, '0')} ${period}`;
-};
-
-let time = formatServiceTime(service.start_time);
-
-if (service.end_time) {
-  time += ` – ${formatServiceTime(service.end_time)}`;
+  <style>
+    .chat-body { max-height: 560px; overflow-y: auto; justify-content: flex-start; }
+    .hub-entry { margin-top: 17px; max-width: 92%; }
+    .user-entry { align-self: flex-end; max-width: 78%; }
+    .user-message { background: linear-gradient(145deg,#7667d9,#5e53b7); border-radius:17px 17px 5px 17px; padding:12px 15px; font-size:13px; line-height:1.5; }
+    .hub-menu { display:grid; gap:8px; margin-top:12px; }
+    .hub-menu-title { color:#8e95ae; font-size:10px; text-transform:uppercase; letter-spacing:.1em; margin-bottom:2px; }
+    .hub-option { width:100%; text-align:left; display:flex; align-items:center; gap:10px; border:1px solid rgba(255,255,255,.09); background:rgba(255,255,255,.035); color:#dfe1eb; border-radius:12px; padding:11px 12px; font:inherit; font-size:12px; cursor:pointer; transition:.16s ease; }
+    .hub-option:hover,.hub-option:focus-visible { background:rgba(118,103,217,.16); border-color:rgba(155,141,240,.42); outline:none; transform:translateY(-1px); }
+    .hub-number { width:23px; height:23px; border-radius:8px; display:grid; place-items:center; flex:0 0 23px; background:rgba(118,103,217,.18); color:#b6adff; font-size:10px; font-weight:800; }
+    .hub-utility { display:flex; gap:7px; flex-wrap:wrap; margin-top:12px; }
+    .hub-utility-btn { border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.025); color:#8f96ad; border-radius:999px; padding:7px 10px; font-size:10px; cursor:pointer; }
+    .hub-utility-btn:hover,.hub-utility-btn:focus-visible { color:#fff; border-color:rgba(155,141,240,.35); outline:none; }
+    .md-result { margin-top:9px; color:#c8ccda; }
+    .md-result ul,.md-result ol { margin:8px 0 0; padding-left:19px; }
+    .md-result li { margin:5px 0; }
+    .link-row { margin-top:12px; }
+    .hub-link { display:inline-flex; align-items:center; gap:6px; color:#c2baff; text-decoration:none; border:1px solid rgba(155,141,240,.28); background:rgba(118,103,217,.11); border-radius:10px; padding:9px 11px; font-weight:700; font-size:11px; }
+    .hub-link:hover,.hub-link:focus-visible { background:rgba(118,103,217,.2); text-decoration:none; outline:2px solid rgba(155,141,240,.35); outline-offset:2px; }
+    .notice { margin-top:11px; padding:10px 11px; border-left:2px solid #7667d9; background:rgba(118,103,217,.06); color:#989fb8; font-size:14px; line-height:1.5; }
+    
+.giving-account-section {
+  margin: 0 0 20px;
+  padding: 0 0 16px;
+  line-height: 1.7;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
 }
 
-      html += `${escapeHtml(service.day)} — ${escapeHtml(service.label)}: ${escapeHtml(time)}<br>`;
-    });
-
-    html += `</div>`;
-  }
-
-  addBot(html);
-  addUtilityButtons();
+.giving-account-section:last-of-type {
+  margin-bottom: 12px;
+  border-bottom: none;
 }
 
-  function aboutDcc() {
-    const html =
-      `<div class="md-result">` +
-      `Welcome to David’s Christian Centre, which we fondly call DCC. We are the home of victorious people, and we are deeply committed to raising a victorious community by schooling and training everyone through the Word of Faith into a life of 100% victory, 100% of the time.` +
-      `<br><br>` +
-      `We get our name from a simple yet powerful scripture, <strong>(1 Chronicles 18:6b)</strong>: just as David never lost a battle, God's walk with us will be the exact same. Everything we do is built around raising victorious people through the Word of Faith and on taking Bible-based principles and actually living them out day by day in our everyday lives.` +
-      `<br><br>` +
-      `Our ministry began in a parlor in 1996, when one man chose to heed God's call to serve. In September 2026, we celebrated our 30th anniversary. We are so glad you are here to learn more about who we are.` +
-      `</div>`;
-    addBot(html);
-    addUtilityButtons();
+.giving-account-section > strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 1rem;
+}
+
+.giving-account-section > div {
+  margin: 2px 0;
+  overflow-wrap: anywhere;
+}
+
+.giving-account-section + .notice {
+  margin-top: 12px;
+  padding: 14px;
+  line-height: 1.7;
+  border-radius: 8px;
+}
+    .muted-note { color:#7f869f; font-size:10px; }
+    .quick { cursor:pointer; }
+    .quick:focus-visible { outline:2px solid rgba(155,141,240,.6); outline-offset:2px; }
+  /* Main-menu visual treatment: matches the reference design while leaving all functionality unchanged. */
+  .hub-menu.dcc-main-menu {
+    gap: 6px;
+    margin-top: 14px;
   }
 
-  function formatLines(text) {
-    const lines = text.split('\n').map(s => s.trim()).filter(Boolean);
-    if (!lines.length) return '';
-    return `<ul>${lines.map(line => `<li>${escapeHtml(line.replace(/^•\s*/,''))}</li>`).join('')}</ul>`;
+  .hub-menu.dcc-main-menu .hub-option {
+    position: relative;
+    min-height: 64px;
+    padding: 10px 42px 10px 76px;
+    border-radius: 15px;
+    background: linear-gradient(135deg, rgba(118,103,217,.14), rgba(255,255,255,.035));
+    border-color: rgba(255,255,255,.07);
+    gap: 0;
+    align-items: flex-start;
   }
 
-  function extractHeadings(file, level = 3) {
-    return parseSections(state.data[file] || '').filter(s => s.level === level);
+  .hub-menu.dcc-main-menu .hub-option::before {
+    content: "";
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    width: 36px;
+    height: 36px;
+    transform: translateY(-50%);
+    border-radius: 11px;
+    background-color: rgba(118,103,217,.16);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 21px 21px;
+    box-shadow: inset 0 0 0 1px rgba(155,141,240,.08);
   }
+
+  /* Make the welcome card exactly the same width as the main-menu bars. */
+  .welcome {
+    align-self: stretch;
+    width: 100%;
+    max-width: none;
+  }
+
+  .welcome .message {
+    width: 100%;
+  }
+
+  /* Main-menu bars do not use trailing arrows. */
+  .hub-menu.dcc-main-menu .hub-option::after {
+    display: none;
+  }
+
+  /* Keep every number and title aligned consistently across all options. */
+  .hub-menu.dcc-main-menu .hub-number {
+    width: 18px;
+    height: auto;
+    flex: 0 0 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-right: 6px;
+    margin-top: 1px;
+    border-radius: 0;
+    background: transparent;
+    color: #f0f1f6;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.25;
+  }
+
+  .hub-menu.dcc-main-menu .hub-number::after {
+    content: ".";
+  }
+
+  .hub-menu.dcc-main-menu .hub-option > span:last-child {
+    display: block;
+    min-width: 0;
+    color: #f0f1f6;
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.25;
+    padding-right: 2px;
+  }
+
+  .hub-menu.dcc-main-menu .hub-option > span:last-child::after {
+    display: block;
+    margin-top: 4px;
+    color: #aeb4cb;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  .hub-menu.dcc-main-menu .hub-option:nth-child(1)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9adff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M12 7v5l3.2 2'/%3E%3C/svg%3E");
+  }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(2)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9adff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='5' width='16' height='15' rx='2'/%3E%3Cpath d='M8 3v4M16 3v4M4 9h16M8 13h.01M12 13h.01M16 13h.01M8 16h.01M12 16h.01'/%3E%3C/svg%3E");
+  }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(3)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9adff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='8' r='3'/%3E%3Ccircle cx='17' cy='10' r='2.5'/%3E%3Cpath d='M3.5 19c.6-3.1 2.6-5 5.5-5s4.9 1.9 5.5 5M14 15.5c2.5-.2 4.7 1 5.5 3.5'/%3E%3C/svg%3E");
+  }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(4)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9adff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 3.5h8l4 4V20.5H6z'/%3E%3Cpath d='M14 3.5v5h4M9 13h6M9 16h6'/%3E%3C/svg%3E");
+  }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(5)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9adff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z'/%3E%3Ccircle cx='12' cy='9' r='2.3'/%3E%3C/svg%3E");
+  }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(6)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9adff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 5.5h14a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H11l-4.5 3v-3H5a3 3 0 0 1-3-3v-6a3 3 0 0 1 3-3z'/%3E%3Cpath d='M7 11.5h10'/%3E%3C/svg%3E");
+  }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(7)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9adff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='m10 8.5 5.5 3.5-5.5 3.5z'/%3E%3C/svg%3E");
+  }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(8)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9adff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M12 10v6M12 7.2h.01'/%3E%3C/svg%3E");
+  }
+
+  .hub-menu.dcc-main-menu .hub-option:nth-child(1) > span:last-child::after { content: "Service times, locations, first-timer information and more"; }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(2) > span:last-child::after { content: "Upcoming events and event information"; }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(3) > span:last-child::after { content: "Messages, videos and other resources"; }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(4) > span:last-child::after { content: "Access and learn about DCC forms"; }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(5) > span:last-child::after { content: "Giving information and support"; }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(6) > span:last-child::after { content: "Information about DCC pastors and ministers"; }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(7) > span:last-child::after { content: "Schools and other DCC resources"; }
+  .hub-menu.dcc-main-menu .hub-option:nth-child(8) > span:last-child::after { content: "Get in touch with the relevant team"; }
+
+  @media (max-width: 480px) {
+    .hub-menu.dcc-main-menu .hub-option { min-height: 60px; padding-left: 67px; }
+    .hub-menu.dcc-main-menu .hub-option::before { left: 10px; width: 34px; height: 34px; }
+    .hub-menu.dcc-main-menu .hub-option > span:last-child { font-size: 12px; }
+    .hub-menu.dcc-main-menu .hub-option > span:last-child::after { font-size: 10px; }
+  }
+
   
-
-function formsMenu() {
-  const forms = [...(state.forms || [])]
-    .filter(form =>
-      form.status === 'active' &&
-      form.name &&
-      form.form_id &&
-      form.link &&
-      form.button_label
-    )
-    .sort((a, b) => a.menu_order - b.menu_order);
-
-  addBot(
-    '<strong>Forms & Registration</strong><br>' +
-    'Select the form you need.'
-  );
-
-  if (!forms.length) {
-    addBot(
-      'Forms are temporarily unavailable. Please try again later.'
-    );
-    addUtilityButtons();
-    return;
-  }
-
-  addMenu(
-    forms.map(form => ({
-      label: form.name,
-      action: () => formDetails(form.form_id)
-    }))
-  );
-
-  addUtilityButtons();
-}
-  
-
-function formDetails(formId) {
-  const form = (state.forms || []).find(
-    item => item.form_id === formId
-  );
-
-  if (!form) {
-    return missing();
-  }
-
-  const purpose = (form.purpose || '').trim();
-  const deadlineRule = (form.deadline_rule || '').trim();
-
-  const noDeadline =
-    /^(not stated(?: on the accessible page)?|none|n\/a|na|not applicable|nil|none stated)\.?$/i;
-
-  const deadline =
-    deadlineRule && !noDeadline.test(deadlineRule)
-      ? deadlineRule
-      : '';
-
-  let html =
-    `<strong>${escapeHtml(form.name)}</strong>`;
-
-  if (purpose) {
-    html +=
-      `<div class="md-result">${escapeHtml(purpose)}</div>`;
-  }
-
-  if (deadline) {
-    html +=
-      `<div class="notice"><strong>Note:</strong> ` +
-      `${escapeHtml(deadline)}</div>`;
-  }
-
-  html +=
-    `<div class="link-row">` +
-    `${link(form.button_label, form.link)}` +
-    `</div>`;
-
-  addBot(html);
-  addUtilityButtons();
-}  
-
-let givingAccountsCache = null;
-
-async function giving() {
-  try {
-    const response = await fetch('/api/giving-accounts', {
-      cache: 'no-store'
-    });
-
-    if (!response.ok) {
-      throw new Error(`Giving accounts API returned ${response.status}`);
-    }
-
-    const result = await response.json();
-
-    if (!result.success || !Array.isArray(result.givingAccounts)) {
-      throw new Error('Invalid giving accounts API response');
-    }
-
-    givingAccountsCache = result.givingAccounts.filter(account =>
-      account.bank &&
-      account.account_name &&
-      account.account_number &&
-      account.currency
-    );
-
-    const banks = [
-      ...new Set(givingAccountsCache.map(account => account.bank))
-    ];
-
-    if (!banks.length) {
-      throw new Error('No giving banks are available');
-    }
-
-    addBot(
-      '<strong>Giving</strong><div class="md-result">' +
-      'Choose a bank to view its giving account details.' +
-      '</div>'
-    );
-
-    addMenu(
-      banks.map(bank => ({
-        label: bank,
-        action: () => givingBankDetails(bank)
-      }))
-    );
-
-    addUtilityButtons();
-
-  } catch (error) {
-    console.error('Could not load giving banks:', error);
-
-    addBot(
-      '<strong>Giving information is currently unavailable.</strong><br>' +
-      'Please visit the official DCC giving page for assistance.' +
-      `<div class="link-row">${link(
-        'Open official Giving page',
-        'https://www.davidschristiancentre.org/give'
-      )}</div>`
-    );
-
-    addUtilityButtons();
-  }
-}
-
-function givingBankDetails(bankName) {
-  if (!Array.isArray(givingAccountsCache)) {
-    return giving();
-  }
-
-  const accounts = givingAccountsCache
-    .filter(account => account.bank === bankName)
-    .sort((a, b) => {
-  const currencyOrder = {
-    NGN: 1,
-    USD: 2,
-    GBP: 3,
-    EUR: 4
-  };
-
-  return (currencyOrder[a.currency] ?? 99) -
-         (currencyOrder[b.currency] ?? 99);
-});
-
-  if (!accounts.length) {
-    addBot(
-      '<strong>No account details found for this bank.</strong>'
-    );
-    addUtilityButtons();
-    return;
-  }
-
-  let html = `<strong>${escapeHtml(bankName)}</strong>`;
-
-  for (const account of accounts) {
-    html += '<div class="md-result">';
-    html += `<strong>${escapeHtml(account.currency)}</strong><br>`;
-    html += `<strong>Account Name:</strong> ${escapeHtml(account.account_name)}<br>`;
-    html += `<strong>Account Number:</strong> ${escapeHtml(account.account_number)}`;
-
-    if (account.swift_bic) {
-      html += `<br><strong>SWIFT/BIC:</strong> ${escapeHtml(account.swift_bic)}`;
-    }
-
-    if (account.sort_code) {
-      html += `<br><strong>Sort Code:</strong> ${escapeHtml(account.sort_code)}`;
-    }
-
-    html += '</div>';
-  }
-
-  html +=
-    '<div class="notice">' +
-    'Please use the account details for the currency you wish to give in. ' +
-    'Verify the details on the official DCC giving page before making a transfer.' +
-    '</div>';
-
-  html +=
-    `<div class="link-row">${link(
-      'Open official Giving page',
-      'https://www.davidschristiancentre.org/give'
-    )}</div>`;
-
-  addBot(html);
-  addUtilityButtons();
-}
-
-  let peopleRosterCache = null;
-  let leadershipAssignmentsCache = null;
-
-  async function loadPeopleRosterData() {
-    if (peopleRosterCache && leadershipAssignmentsCache) {
-      return { people: peopleRosterCache, assignments: leadershipAssignmentsCache };
-    }
-
-    const [peopleResponse, assignmentsResponse] = await Promise.all([
-      fetch('/api/people', { cache: 'no-store' }),
-      fetch('/api/leadership-assignments', { cache: 'no-store' })
-    ]);
-
-    if (!peopleResponse.ok || !assignmentsResponse.ok) {
-      throw new Error('People or leadership assignments API request failed');
-    }
-
-    const [peopleResult, assignmentsResult] = await Promise.all([
-      peopleResponse.json(),
-      assignmentsResponse.json()
-    ]);
-
-    if (!peopleResult.success || !Array.isArray(peopleResult.people) ||
-        !assignmentsResult.success || !Array.isArray(assignmentsResult.assignments)) {
-      throw new Error('Invalid people or leadership assignments API response');
-    }
-
-    peopleRosterCache = peopleResult.people;
-    leadershipAssignmentsCache = assignmentsResult.assignments;
-    return { people: peopleRosterCache, assignments: leadershipAssignmentsCache };
-  }
-
-  function leadershipMenu() {
-    addBot('<strong>Leadership</strong><br>What would you like to see?');
-    addMenu([
-      {label:'Pastors', action:() => rosterView('pastors')},
-      {label:'Ministers', action:() => rosterView('ministers')},
-      {label: 'Workforce Leaders', action: () => workforceLeadersMenu()}
-    ]);
-    addUtilityButtons();
-  }
-
-  function workforceLeadersMenu() {
-  addBot(
-    '<strong>Workforce Leaders</strong><br>' +
-    'Which branch would you like to explore?'
-  );
-
-  addMenu([
-    {
-      label: 'DCC Mainland Workforce Leaders',
-      action: () => workforceDepartments('Mainland')
-    },
-    {
-      label: 'DCC Island Workforce Leaders',
-      action: () => workforceDepartments('Island')
-    }
-  ]);
-
-  addUtilityButtons();
-}
-  
-let workforceDepartmentsCache = null;
-
-async function parseWorkforceDepartments(branch) {
-  if (!workforceDepartmentsCache) {
-    try {
-      const response = await fetch('/api/departments');
-
-      if (!response.ok) {
-        throw new Error(`Departments API returned ${response.status}`);
-      }
-
-      const result = await response.json();
-
-      if (!result.success || !Array.isArray(result.departments)) {
-        throw new Error('Invalid departments API response');
-      }
-
-      workforceDepartmentsCache = result.departments;
-    } catch (error) {
-      console.error('Failed to load departments:', error);
-      return [];
-    }
-  }
-
-  return workforceDepartmentsCache
-    .filter(department =>
-      department.centre?.toLowerCase() === branch.toLowerCase() &&
-      department.status === 'active'
-    )
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .map(department => {
-      const assignments = [];
-
-      assignments.push({
-        role: 'HOD',
-        name: department.hod?.name || 'Not available'
-      });
-
-      const assistants = Array.isArray(department.assistant_hods)
-        ? department.assistant_hods
-        : [];
-
-      if (assistants.length) {
-        assistants.forEach(assistant => {
-          assignments.push({
-            role: 'Assistant HOD',
-            name: assistant?.name || 'Not available'
-          });
-        });
-      } else {
-        assignments.push({
-          role: 'Assistant HOD',
-          name: 'Not available'
-        });
-      }
-
-      return {
-        name: department.name,
-        assignments
-      };
-    });
-}
-
-async function workforceDepartments(branch) {
-  const departments = await parseWorkforceDepartments(branch);
-
-  if (!departments.length) {
-    addBot(
-      '<strong>Workforce department information unavailable.</strong><br>' +
-      'The department list could not be loaded. Please try again later.'
-    );
-    addUtilityButtons();
-    return;
-  }
-
-  addBot(
-    `<strong>DCC ${escapeHtml(branch)} Workforce Leaders</strong><br>` +
-    'Select a department to view its HOD and Assistant HOD assignments.'
-  );
-
-  addMenu(departments.map(department => ({
-    label: department.name,
-    action: () => workforceDepartmentDetails(branch, department.name)
-  })));
-
-  addUtilityButtons();
-}
-
-async function workforceDepartmentDetails(branch, departmentName) {
-  const departments = await parseWorkforceDepartments(branch);
-
-  const department = departments.find(
-    item => item.name === departmentName
-  );
-
-  if (!department) {
-    addBot('<strong>Department information unavailable.</strong>');
-    addUtilityButtons();
-    return;
-  }
-
-  const list = department.assignments.map(item =>
-    `<li><strong>${escapeHtml(item.role)}:</strong> ` +
-    `${escapeHtml(item.name || 'Not available')}</li>`
-  ).join('');
-
-  addBot(
-    `<strong>${escapeHtml(department.name)}</strong>` +
-    `<div class="md-result"><ol>${list}</ol></div>`
-  );
-
-  addUtilityButtons();
-}
-
-  async function rosterView(kind, count = null) {
-    const title = kind === 'pastors' ? 'Pastors' : 'Ministers';
-    try {
-      const { people, assignments } = await loadPeopleRosterData();
-      const expectedTitle = kind === 'pastors' ? 'pastor' : 'minister';
-      const roster = people
-        .filter(person => String(person.roster_status || '').toLowerCase() === 'current' &&
-          String(person.ministerial_title || '').toLowerCase() === expectedTitle)
-        .sort((a, b) => String(a.display_name || '').localeCompare(String(b.display_name || '')));
-
-      if (!roster.length) {
-        addBot(`No ${escapeHtml(title.toLowerCase())} are currently listed.`);
-        addUtilityButtons();
-        return;
-      }
-
-      const shown = count ? roster.slice(0, count) : roster;
-      const cards = shown.map(person => {
-        const personAssignments = assignments.filter(item => item.person_id === person.person_id);
-        const positionLines = personAssignments.map(item => {
-          const role = String(item.role || '').trim();
-          const branch = String(item.centre || item.branch || item.scope || '').trim();
-          const position = [role, branch].filter(Boolean).join(' — ');
-          return position ? `<div class="leadership-card-position"><strong>Position:</strong> ${escapeHtml(position)}</div>` : '';
-        }).filter(Boolean).join('');
-
-        return `<article class="leadership-card"><div class="leadership-card-name">${escapeHtml(kind === 'pastors' ? 'Pastor' : 'Minister')} ${escapeHtml(person.display_name || 'Name not available')}</div>${positionLines}</article>`;
-      }).join('');
-
-      addBot(`<strong>${escapeHtml(title)}</strong><div class="leadership-roster">${cards}</div>${count ? `<div class="muted-note">Showing ${shown.length} of ${roster.length}.</div>` : ''}`);
-      addUtilityButtons();
-    } catch (error) {
-      console.error(`Failed to load ${title.toLowerCase()} roster:`, error);
-      addBot(`Sorry, the ${escapeHtml(title.toLowerCase())} list could not be loaded right now. Please try again shortly.`);
-      addUtilityButtons();
-    }
-  }
-
-  function leadershipAssignments() {
-    const sec = findSection('05-leadership-workforce.md', 'Existing leadership assignments');
-    const dept = findSection('05-leadership-workforce.md', 'Workforce hierarchy');
-    let html = '';
-    if (sec) html += `<strong>Documented leadership assignments</strong><div class="md-result">${formatLines(sectionText(sec))}</div>`;
-    if (dept) html += `<strong>Workforce hierarchy</strong><div class="md-result">${formatLines(sectionText(dept))}</div>`;
-    addBot(html || ''); addUtilityButtons();
-  }
-
-  function eventsMenu() {
-  const events = getUpcomingEvents();
-
-  addBot(
-    '<strong>Here are the currently scheduled upcoming DCC events.</strong><br>' +
-    'Which event would you like to know more about?'
-  );
-
-  if (!events.length) {
-    addBot('There are no upcoming events listed at the moment. Please check again later or contact DCC for updates.');
-    addUtilityButtons();
-    return;
-  }
-
-  addMenu(events.map(event => ({
-    label: event.title,
-    action: () => eventDetails(event)
-  })));
-
-  addUtilityButtons();
-}
-
-  function getUpcomingEvents() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  return (state.events || [])
-    .filter(event => {
-      if (!event.start_date || event.status === 'cancelled') return false;
-      const startDate = new Date(`${event.start_date}T00:00:00`);
-      if (Number.isNaN(startDate.getTime())) return false;
-      const endDate = event.end_date
-        ? new Date(`${event.end_date}T23:59:59`)
-        : new Date(`${event.start_date}T23:59:59`);
-      if (Number.isNaN(endDate.getTime())) return false;
-      return endDate >= today;
-    })
-    .sort((a, b) => new Date(`${a.start_date}T00:00:00`) - new Date(`${b.start_date}T00:00:00`))
-    .slice(0, 20);
-}
-
-  function formatEventDate(value) {
-  if (!value) return '';
-  const date = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-}
-
-  function formatEventDate(value) {
-  if (!value) return '';
-  const date = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-}
-
-  function formatServiceTime(timeValue) {
-  if (!timeValue) return '';
-  const [hour, minute] = String(timeValue).split(':').map(Number);
-  if (Number.isNaN(hour) || Number.isNaN(minute)) return String(timeValue);
-  const period = hour >= 12 ? 'PM' : 'AM';
-  const displayHour = hour % 12 || 12;
-  return minute === 0
-    ? `${displayHour} ${period}`
-    : `${displayHour}:${String(minute).padStart(2, '0')} ${period}`;
-}
-
-  function getMonthlyTopicBranchSchedule(event) {
-  const centres = Array.isArray(state.worshipCentres) ? state.worshipCentres : [];
-  const isMidweek = /mid.?week/i.test(event.title || event.service_period || '');
-  const branchDefinitions = [
-    { label: 'Mainland', centreName: 'DCC Mainland (Victory Dome)' },
-    { label: 'Island', centreName: 'DCC Island (DCC Lekki)' }
-  ];
-
-  return branchDefinitions.map(branch => {
-    const centre = centres.find(item => item.name === branch.centreName);
-    if (!centre || !Array.isArray(centre.services)) {
-      return { label: branch.label, times: 'Service times unavailable' };
-    }
-
-    const services = centre.services.filter(service => {
-      const day = String(service.day || '').toLowerCase();
-      const serviceLabel = String(service.label || '').toLowerCase();
-      if (isMidweek) {
-        return day === 'tuesday' || day === 'wednesday' ||
-          serviceLabel.includes('mid-week') || serviceLabel.includes('midweek');
-      }
-      return day === 'sunday' || serviceLabel.includes('sunday');
-    });
-
-    const times = services.map(service => {
-      const start = formatServiceTime(service.start_time);
-      const end = formatServiceTime(service.end_time);
-      return start && end ? `${start} – ${end}` : (start || end);
-    }).filter(Boolean);
-
-    return {
-      label: branch.label,
-      times: times.length ? times.join('; ') : 'Service times unavailable'
-    };
-  });
-}
-
-  function eventDetails(event) {
-  // Monthly service topics reuse the live worship-centre service data.
-  if (event.event_type === 'monthly_service_topic') {
-    let html = `<strong>Topic: ${escapeHtml(event.topic || event.title || 'Service topic')}</strong>`;
-    const displayDate = event.display_date ||
-      (event.start_date && event.end_date
-        ? `${formatEventDate(event.start_date)} – ${formatEventDate(event.end_date)}`
-        : '');
-
-    if (displayDate) {
-      html += `<div class="md-result"><strong>Date:</strong> ${escapeHtml(displayDate)}</div>`;
-    }
-
-    const branches = getMonthlyTopicBranchSchedule(event);
-    html += `<div class="md-result"><strong>Branch schedule</strong><ul>` +
-      branches.map(branch =>
-        `<li><strong>${escapeHtml(branch.label)}:</strong> ${escapeHtml(branch.times)}</li>`
-      ).join('') +
-      `</ul></div>`;
-
-    if (event.note) html += `<div class="notice">${escapeHtml(event.note)}</div>`;
-    addBot(html);
-    addUtilityButtons();
-    return;
-  }
-
-  let html = `<strong>${escapeHtml(event.title || 'DCC Event')}</strong>`;
-
-  if (event.start_date) {
-    const start = formatEventDate(event.start_date);
-    const end = event.end_date && event.end_date !== event.start_date ? formatEventDate(event.end_date) : '';
-    html += `<div class="md-result"><strong>Date:</strong> ${escapeHtml(start)}${end ? ` – ${escapeHtml(end)}` : ''}</div>`;
-  }
-
-  const hasProgrammeSchedule = Array.isArray(event.schedule) && event.schedule.length > 0;
-  if (event.recurrence && !hasProgrammeSchedule) {
-    const recurrence = typeof event.recurrence === 'string' ? event.recurrence : JSON.stringify(event.recurrence);
-    html += `<div class="md-result"><strong>Schedule:</strong> ${escapeHtml(recurrence)}</div>`;
-  }
-
-  if (event.start_time) {
-    html += `<div class="md-result"><strong>Time:</strong> ${escapeHtml(event.start_time)}`;
-    if (event.end_time) html += ` – ${escapeHtml(event.end_time)}`;
-    html += `</div>`;
-  }
-
-  if (hasProgrammeSchedule) {
-    const scheduleItems = event.schedule.map(item => {
-      const parts = [];
-      if (item.title) parts.push(`<strong>${escapeHtml(item.title)}:</strong>`);
-      if (item.start_date) {
-        let dateText = formatEventDate(item.start_date);
-        if (item.end_date && item.end_date !== item.start_date) dateText += ` – ${formatEventDate(item.end_date)}`;
-        parts.push(escapeHtml(dateText) + (item.time ? ',' : ''));
-      }
-      if (item.time) parts.push(escapeHtml(item.time));
-      if (item.venue) {
-        const venueText = String(item.venue).replace(/\s+branch$/i, '');
-        parts.push(`at ${escapeHtml(venueText)}${item.format === 'In person' ? ' branch' : ''}`);
-      } else if (item.format) {
-        parts.push(escapeHtml(item.format === 'Virtual' ? 'via Zoom' : item.format));
-      }
-      return `<li>${parts.join(' ')}</li>`;
-    }).join('');
-    html += `<div class="md-result"><strong>Programme schedule</strong><ul>${scheduleItems}</ul></div>`;
-  } else if (event.venue) {
-    html += `<div class="md-result"><strong>Venue:</strong> ${escapeHtml(event.venue)}</div>`;
-  }
-
-  if (event.speakers) {
-    const speakers = Array.isArray(event.speakers) ? event.speakers.join(', ') : event.speakers;
-    html += `<div class="md-result"><strong>Speakers:</strong> ${escapeHtml(speakers)}</div>`;
-  }
-
-  if (event.description) html += `<div class="md-result">${escapeHtml(event.description)}</div>`;
-  if (event.entry_fee) {
-    html += `<div class="md-result"><strong>Entry fee:</strong> ${escapeHtml(typeof event.entry_fee === 'string' ? event.entry_fee : JSON.stringify(event.entry_fee))}</div>`;
-  }
-  if (event.registration_link) html += `<div class="link-row">${link(event.registration_label || 'Register', event.registration_link)}</div>`;
-  if (event.related_site) html += `<div class="link-row">${link('Related website', event.related_site)}</div>`;
-  if (event.note) html += `<div class="notice">${escapeHtml(event.note)}</div>`;
-
-  addBot(html);
-  addUtilityButtons();
-}
-
-  function sermonsMenu() {
-    addBot('<strong>Which would you like to access?</strong>');
-    addMenu([
-      {label:'Sunday Sermon', action:() => sermonLocation('Sunday Sermon')},
-      {label:'Mid-Week Sermon', action:() => sermonLocation('Mid-Week Sermon')}
-    ]);
-    addUtilityButtons();
-  }
-
-  function sermonLocation(type) {
-    addBot(`<strong>${escapeHtml(type)}</strong><br>Which location?`);
-    addMenu([
-      {label:'Mainland', action:() => sermonLink(type,'Mainland')},
-      {label:'Island', action:() => sermonLink(type,'Island')}
-    ]);
-    addUtilityButtons();
-  }
-
-  function sermonLink(type, location) {
-    addBot(`<strong>${escapeHtml(type)} — ${escapeHtml(location)}</strong><br>Use the shared DCC Victory Celebrations sermon resource:<div class="link-row">${link('View sermons', CONFIG.sermonsUrl)}</div>`);
-    addUtilityButtons();
-  }
-
-  let schoolsCache = null;
-  let resourcesCache = null;
-
-  async function loadSchoolsAndResources() {
-    if (Array.isArray(schoolsCache) && Array.isArray(resourcesCache)) {
-      return { schools: schoolsCache, resources: resourcesCache };
-    }
-
-    const [schoolsResponse, resourcesResponse] = await Promise.all([
-      fetch('/api/schools', { cache: 'no-store' }),
-      fetch('/api/resources', { cache: 'no-store' })
-    ]);
-
-    if (!schoolsResponse.ok || !resourcesResponse.ok) {
-      throw new Error('Schools or resources API request failed');
-    }
-
-    const [schoolsResult, resourcesResult] = await Promise.all([
-      schoolsResponse.json(),
-      resourcesResponse.json()
-    ]);
-
-    if (!schoolsResult.success || !Array.isArray(schoolsResult.schools) ||
-        !resourcesResult.success || !Array.isArray(resourcesResult.resources)) {
-      throw new Error('Invalid schools or resources API response');
-    }
-
-    schoolsCache = schoolsResult.schools
-      .filter(school => school && school.name)
-      .sort((a, b) => String(a.name).localeCompare(String(b.name)));
-    resourcesCache = resourcesResult.resources
-      .filter(resource => resource && resource.title && resource.url)
-      .sort((a, b) => String(a.title).localeCompare(String(b.title)));
-
-    return { schools: schoolsCache, resources: resourcesCache };
-  }
-
-  async function resourcesMenu() {
-    addBot('<strong>Resources</strong><br>Explore messages and resources to help you grow in the Word of Faith.');
-    addMenu([
-      { label: 'Church Resources', action: () => resourceCatalogueMenu() },
-      { label: 'DCC Schools Website', action: () => resourceLink(
-        'DCC Schools Website',
-        'Visit the official DCC Schools website for more information.',
-        'https://schools.davidschristiancentre.org/'
-      ) }
-    ]);
-    addUtilityButtons();
-  }
-
-  async function resourceCatalogueMenu() {
-    try {
-      const { resources } = await loadSchoolsAndResources();
-      const visibleResources = resources
-        .filter(resource => resource.is_active !== false)
-        .sort((a, b) => {
-          const orderA = Number.isFinite(Number(a.display_order)) ? Number(a.display_order) : Number.MAX_SAFE_INTEGER;
-          const orderB = Number.isFinite(Number(b.display_order)) ? Number(b.display_order) : Number.MAX_SAFE_INTEGER;
-          return orderA - orderB || String(a.title).localeCompare(String(b.title));
-        });
-
-      if (!visibleResources.length) throw new Error('No church resource records are available');
-
-      addBot('<strong>Church Resources</strong><br>Choose a resource to explore.');
-      addMenu(visibleResources.map(resource => ({
-        label: resource.title,
-        action: () => resourceDetails(resource.resource_id)
-      })));
-      addUtilityButtons();
-    } catch (error) {
-      console.error('Could not load church resources:', error);
-      addBot('<strong>Church resources are currently unavailable.</strong><br>Please try again later or visit the official DCC website.');
-      addUtilityButtons();
-    }
-  }
-
-  async function resourceDetails(resourceId) {
-    try {
-      const { resources } = await loadSchoolsAndResources();
-      const resource = resources.find(item => item.resource_id === resourceId && item.is_active !== false);
-      if (!resource) return missing();
-
-      let html = `<strong>${escapeHtml(resource.title)}</strong>`;
-      if (resource.description) {
-        html += `<div class="md-result">${escapeHtml(resource.description)}</div>`;
-      }
-      const buttonLabel = resource.button_label || `Open ${resource.title}`;
-      html += `<div class="link-row">${link(buttonLabel, resource.url)}</div>`;
-      addBot(html);
-      addUtilityButtons();
-    } catch (error) {
-      console.error('Could not load resource details:', error);
-      addBot('<strong>Resource information is currently unavailable.</strong><br>Please try again later.');
-      addUtilityButtons();
-    }
-  }
-
-  function resourceLink(title, description, url) {
-    addBot(
-      `<strong>${escapeHtml(title)}</strong>` +
-      `<div class="md-result">${escapeHtml(description)}</div>` +
-      `<div class="link-row">${link(title, url)}</div>`
-    );
-    addUtilityButtons();
-  }
-
-  function help(fromMainMenu = false) {
-  state.awaitingWhatsApp = false;
-
-  addBot(
-    '<strong>Contact the Team</strong><br>' +
-    'How would you like to connect?'
-  );
-
-  addMenu([
-    {
-      label:'A team member should contact me on WhatsApp',
-      action:() => requestWhatsApp()
-    },
-    {
-      label:'Official DCC Contact page',
-      action:() => resourceLink(
-        'DCC Contact page',
-        'https://www.davidschristiancentre.org/forms/contact'
-      )
-    }
-  ]);
-
-  addUtilityButtons({ showContact: !fromMainMenu });
-}
-
-  function requestWhatsApp() {
-  state.awaitingWhatsApp = false;
-
-  addBot(`
-    <strong>Contact an Information Hub Member</strong>
-    <div class="contact-form">
-
-      <div class="contact-field">
-        <label for="contact-name">Name</label>
-        <input
-          id="contact-name"
-          type="text"
-          class="contact-input"
-          autocomplete="name"
-          placeholder="Enter your name"
-        >
+    /* Database-backed pastor and minister roster cards */
+    .leadership-roster { display:grid; gap:10px; margin-top:12px; }
+    .leadership-card { padding:12px 14px; border:1px solid rgba(255,255,255,.09); border-radius:12px; background:rgba(255,255,255,.035); }
+    .leadership-card-name { color:#f0f1f6; font-size:13px; font-weight:750; line-height:1.45; }
+    .leadership-card-position { margin-top:5px; color:#b9bdd0; font-size:12px; line-height:1.55; }
+    .leadership-card-position strong { color:#a99eff; font-weight:650; }
+</style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <a class="brand" href="#" aria-label="David's Christian Centre">
+        <img src="data:image/webp;base64,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" alt="DCC logo">
+        <span class="brand-copy">
+          <span class="brand-name">David's Christian Centre</span>
+          <span class="brand-sub">Information Hub</span>
+        </span>
+      </a>
+      <div class="header-title">
+        <span class="prototype">Prototype</span>
+        Information Hub
       </div>
+    </header>
 
-      <div class="contact-field">
-        <label for="contact-whatsapp">WhatsApp number</label>
-        <input
-          id="contact-whatsapp"
-          type="tel"
-          class="contact-input"
-          autocomplete="tel"
-          placeholder="080..."
-          inputmode="tel"
-        >
-      </div>
+    <main>
+      <section class="intro">
+        <div class="eyebrow">DCC Information Hub</div>
+        <h1>Ask. <span class="accent">Find.</span><br>Connect.</h1>
+        <p>
+          Welcome to the DCC Information Hub. Ask a question about services,
+          events, ministries, forms, locations or anything else you need to know.
+        </p>
 
-      <div class="contact-field">
-        <label>Are you a DCC worker?</label>
-
-        <div class="contact-radio-group">
-          <label class="contact-radio">
-            <input type="radio" name="dcc-worker" value="yes">
-            <span>Yes</span>
-          </label>
-
-          <label class="contact-radio">
-            <input type="radio" name="dcc-worker" value="no">
-            <span>No</span>
-          </label>
+        <div class="topics" aria-label="Example topics">
+          <span class="topic">Service times</span>
+          <span class="topic">Events</span>
+          <span class="topic">Ministries</span>
+          <span class="topic">Forms</span>
+          <span class="topic">Locations</span>
         </div>
-      </div>
+      </section>
 
-      <div
-        class="contact-field"
-        id="department-field"
-        style="display:none;"
-      >
-        <label for="contact-department">Department</label>
-        <input
-          id="contact-department"
-          type="text"
-          class="contact-input"
-          placeholder="Enter your department"
-        >
-      </div>
+      <section class="chat-shell" aria-label="Information Hub chatbot">
+        <div class="chat-head">
+          <div class="bot-id">
+            <div class="bot-avatar">D</div>
+            <div>
+              <div class="bot-name">DCC Information Hub</div>
+              <div class="bot-status"><span class="online"></span>Starting…</div>
+            </div>
+          </div>
+          <div style="color:#777e99;font-size:18px;">•••</div>
+        </div>
 
-      <button
-        type="button"
-        id="contact-submit"
-        class="contact-submit"
-        disabled
-      >
-        Submit
-      </button>
+        <div class="chat-body">
+        </div>
 
-    </div>
-  `);
+        <div class="input-wrap">
+          <div class="input-box">
+            <input type="text" placeholder="Ask a question about DCC..." aria-label="Ask a question">
+            <button class="send" aria-label="Send question">↑</button>
+          </div>
+          <div class="privacy">Information Hub prototype · Responses will appear here</div>
+        </div>
+      </section>
+    </main>
 
-  const nameInput = document.getElementById('contact-name');
-  const whatsappInput = document.getElementById('contact-whatsapp');
-  const workerInputs = document.querySelectorAll('input[name="dcc-worker"]');
-  const departmentField = document.getElementById('department-field');
-  const departmentInput = document.getElementById('contact-department');
-  const submitButton = document.getElementById('contact-submit');
-
-  function countLetters(value) {
-    return (value.match(/[A-Za-z]/g) || []).length;
-  }
-
-  function countDigits(value) {
-    return (value.match(/\d/g) || []).length;
-  }
-
-  function validatePhoneCharacters(value) {
-    return /^[+\d\s().-]*$/.test(value);
-  }
-
-  function validateForm() {
-    const nameValid =
-      countLetters(nameInput.value.trim()) >= 3;
-
-    const whatsappValue = whatsappInput.value.trim();
-
-    const whatsappValid =
-      countDigits(whatsappValue) >= 4 &&
-      validatePhoneCharacters(whatsappValue);
-
-    const selectedWorker = document.querySelector(
-      'input[name="dcc-worker"]:checked'
-    );
-
-    if (!selectedWorker) {
-      departmentField.style.display = 'none';
-      submitButton.disabled = true;
-      return;
-    }
-
-    const isWorker = selectedWorker.value === 'yes';
-
-    if (isWorker) {
-      departmentField.style.display = '';
-
-      const departmentValid =
-        countLetters(departmentInput.value.trim()) >= 3;
-
-      submitButton.disabled =
-        !(nameValid && whatsappValid && departmentValid);
-    } else {
-      departmentField.style.display = 'none';
-      departmentInput.value = '';
-
-      submitButton.disabled =
-        !(nameValid && whatsappValid);
-    }
-  }
-
-  workerInputs.forEach(input => {
-    input.addEventListener('change', validateForm);
-  });
-
-  nameInput.addEventListener('input', validateForm);
-  whatsappInput.addEventListener('input', validateForm);
-  departmentInput.addEventListener('input', validateForm);
-
-  submitButton.addEventListener('click', () => {
-    submitContactRequest();
-  });
-
-  addUtilityButtons();
-  nameInput.focus();
-}
-
-async function submitContactRequest() {
-  const nameInput = document.getElementById('contact-name');
-  const whatsappInput = document.getElementById('contact-whatsapp');
-  const selectedWorker = document.querySelector(
-    'input[name="dcc-worker"]:checked'
-  );
-  const departmentInput = document.getElementById('contact-department');
-  const submitButton = document.getElementById('contact-submit');
-
-  if (!nameInput || !whatsappInput || !selectedWorker || !submitButton) {
-    console.error('Contact form elements are missing.');
-    return;
-  }
-
-  const isDccWorker = selectedWorker.value === 'yes';
-
-  const payload = {
-    session_id: state.sessionId,
-    name: nameInput.value.trim(),
-    whatsapp_number: whatsappInput.value.trim(),
-    is_dcc_worker: isDccWorker,
-    department: isDccWorker
-      ? departmentInput.value.trim()
-      : null,
-    entry_point: 'whatsapp_form',
-    context: state.currentContext
-  };
-
-  submitButton.disabled = true;
-  submitButton.textContent = 'Submitting...';
-
-  try {
-    const res = await fetch('/api/contact-requests', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const result = await res.json();
-
-    if (!res.ok || !result.success) {
-      throw new Error(
-        result.message || 'Could not submit contact request.'
-      );
-    }
-
-    els.chat.innerHTML = '';
-
-addBot(
-  '<strong>Thank you!</strong><br>' +
-  'Your request has been received. An Information Hub member will contact you on WhatsApp.'
-);
-
-addUtilityButtons();
-
-  } catch (error) {
-    console.error('Contact request failed:', error);
-
-    addBot(
-      '<strong>We could not submit your request.</strong><br>' +
-      'Please check your details and try again, or use the official DCC Contact page.'
-    );
-
-    addUtilityButtons();
-
-  } finally {
-    submitButton.disabled = false;
-    submitButton.textContent = 'Submit';
-  }
-}
-
-function missing() {
-  addBot(
-    '<strong>I couldn\'t find that information.</strong><br>' +
-    'Please try another menu option or connect with an Information Hub member for assistance.'
-  );
-
-  addUtilityButtons();
-}
-
-function tokenize(query) {
-  return query
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, ' ')
-    .split(/\s+/)
-    .filter(token => token.length > 1);
-}
-
-  function freeTextSearch(query) {
-    const q = query.toLowerCase();
-    const tokens = tokenize(query);
-    const candidates = [];
-    for (const {file, text} of allText()) {
-      const sections = parseSections(state.data[file] || '');
-      for (const sec of sections) {
-        const hay = `${sec.title} ${sec.lines.join(' ')}`.toLowerCase();
-        let score = 0;
-        if (hay.includes(q)) score += 20;
-        tokens.forEach(t => { if (hay.includes(t)) score += 2; });
-        if (score > 0) candidates.push({score,file,sec});
+    <footer>
+      <span>David's Christian Centre</span>
+      <span>Information Hub · Prototype</span>
+    </footer>
+  </div>
+<script src="dcc-information-hub.js?v=20261018-leadership-cards-v2"></script>
+<script>
+(function () {
+  function markMainMenu() {
+    document.querySelectorAll('.hub-menu').forEach(function (menu) {
+      var first = menu.querySelector('.hub-option > span:last-child');
+      if (first && first.textContent.trim() === 'Church Information / Services') {
+        menu.classList.add('dcc-main-menu');
       }
-    }
-    return candidates.sort((a,b)=>b.score-a.score).slice(0,5);
-  }
-
-  function answerFreeText(query) {
-  const q = query.toLowerCase();
-
-  if (
-    (q.includes('service') && q.includes('time')) ||
-    q.includes('service times') ||
-    q.includes('when are the services')
-  ) {
-    return churchMenu();
-  }
-
-  if ((q.includes('island') || q.includes('lekki')) && (q.includes('midweek') || q.includes('mid-week') || q.includes('tuesday'))) return branchDetails('Island — DCC Lekki');
-
-    const results = freeTextSearch(query);
-    if (!results.length) return missing();
-    const top = results[0];
-    addBot(`<strong>${escapeHtml(top.sec.title)}</strong><div class="md-result">${formatLines(sectionText(top.sec))}</div>`);
-    if (results.length > 1) {
-      addBot('<span class="muted-note">I found related information in the knowledge base. If this did not answer your question, choose another menu option or connect with DCC.</span>');
-    }
-    addUtilityButtons();
-  }
-
-  async function loadKnowledgeBase() {
-    const entries = await Promise.all(CONFIG.dataFiles.map(async file => {
-      const res = await fetch(file, {cache:'no-store'});
-      if (!res.ok) throw new Error(`Could not load ${file}: ${res.status}`);
-      return [file, await res.text()];
-    }));
-    entries.forEach(([file, text]) => state.data[file] = text);
-    state.ready = true;
-    state.loading = false;
-    els.status.innerHTML = '<span class="online"></span>Knowledge base loaded';
-  }
-
-async function loadEventsFromApi() {
-  const res = await fetch('/api/events', {
-    cache: 'no-store'
-  });
-
-  if (!res.ok) {
-    throw new Error(`Could not load events: ${res.status}`);
-  }
-
-  const result = await res.json();
-
-  if (!result.success) {
-    throw new Error(result.message || 'Could not load events');
-  }
-
-  state.events = result.events;
-
-  console.log('Events loaded from MongoDB:', state.events);
-
-  return state.events;
-}
-
-async function loadWorshipCentresFromApi() {
-  const res = await fetch('/api/worship-centres', {
-    cache: 'no-store'
-  });
-
-  if (!res.ok) {
-    throw new Error(`Could not load worship centres: ${res.status}`);
-  }
-
-  const result = await res.json();
-
-  if (!result.success) {
-    throw new Error(result.message || 'Could not load worship centres');
-  }
-
-  state.worshipCentres = result.worshipCentres;
-
-  console.log('Worship centres loaded from MongoDB:', state.worshipCentres);
-
-  return state.worshipCentres;
-}
-
-  
-async function loadFormsFromApi() {
-  const res = await fetch('/api/forms', {
-    cache: 'no-store'
-  });
-
-  if (!res.ok) {
-    throw new Error(`Could not load forms: ${res.status}`);
-  }
-
-  const result = await res.json();
-
-  if (!result.success || !Array.isArray(result.forms)) {
-    throw new Error(result.message || 'Invalid forms response');
-  }
-
-  state.forms = result.forms.filter(
-    form => form.status === 'active' && form.name && form.link
-  );
-
-  console.log('Forms loaded from MongoDB:', state.forms);
-
-  return state.forms;
-}
-
-
-  function bind() {
-    document.querySelectorAll('.quick').forEach(q => {
-      q.setAttribute('role','button'); q.setAttribute('tabindex','0');
-      const label = q.textContent.trim();
-      const fn = () => {
-        if (label.includes('services')) navigate('When are the services?', churchMenu);
-        else if (label.includes('events')) navigate('What events are coming up?', eventsMenu);
-        else if (label.includes('ministry')) navigate('Tell me about a ministry', resourcesMenu);
-        else if (label.includes('form')) navigate('Where can I find a form?', formsMenu);
-      };
-      q.addEventListener('click', fn); q.addEventListener('keydown', e => {if(e.key==='Enter'||e.key===' ') {e.preventDefault(); fn();}});
     });
-    els.send.addEventListener('click', submit);
-    els.input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
   }
 
-  function submit() {
-  const q = els.input.value.trim();
-  if (!q || !state.ready) return;
-  els.input.value = '';
-  addUser(q);
-  answerFreeText(q);
-}
-
-  async function init() {
-  bind();
-  try {
-  await loadKnowledgeBase();
-  await loadEventsFromApi();
-  await loadWorshipCentresFromApi();
-  await loadFormsFromApi();
-
-  state.ready = true;
-    state.loading = false;
-
-    els.status.innerHTML = '<span class="online"></span>Connected to DCC Information Hub';
-
-    restart();
-  } catch (err) {
-    console.error(err);
-
-    els.status.innerHTML = '<span style="color:#e9a3a3">Information Hub unavailable</span>';
-
-    addBot('<strong>The DCC Information Hub could not connect to the database.</strong><br>Please try again later.');
-  }
-}
-
-  init();
+  markMainMenu();
+  var observer = new MutationObserver(markMainMenu);
+  observer.observe(document.querySelector('.chat-body') || document.body, { childList: true, subtree: true });
 })();
+</script>
+</body>
+</html>
