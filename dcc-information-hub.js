@@ -245,7 +245,7 @@ async function recordContactEvent(entryPoint, context = null) {
   state.stack = [];
   state.isMainMenu = true;
 
-  addBot('<strong>Welcome! Please choose an option below to get started.</strong>');
+  addBot('<strong>Welcome!<br>What would you like to know?</strong>');
 
   addMenu([
     {label:'Church Information / Services', action:() => churchMenu()},
@@ -1520,26 +1520,19 @@ async function loadFormsFromApi() {
   function bind() {
     document.querySelectorAll('.quick').forEach(q => {
       q.setAttribute('role','button'); q.setAttribute('tabindex','0');
-      const label = q.textContent.trim();
+      const label = q.textContent.trim().toLowerCase();
       const fn = () => {
         if (label.includes('services')) navigate('When are the services?', churchMenu);
         else if (label.includes('events')) navigate('What events are coming up?', eventsMenu);
         else if (label.includes('ministry')) navigate('Tell me about a ministry', resourcesMenu);
         else if (label.includes('form')) navigate('Where can I find a form?', formsMenu);
       };
-      q.addEventListener('click', fn); q.addEventListener('keydown', e => {if(e.key==='Enter'||e.key===' ') {e.preventDefault(); fn();}});
+      q.addEventListener('click', fn);
+      q.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); }
+      });
     });
-    els.send.addEventListener('click', submit);
-    els.input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
   }
-
-  function submit() {
-  const q = els.input.value.trim();
-  if (!q || !state.ready) return;
-  els.input.value = '';
-  addUser(q);
-  answerFreeText(q);
-}
 
   async function init() {
   bind();
@@ -1552,7 +1545,7 @@ async function loadFormsFromApi() {
   state.ready = true;
     state.loading = false;
 
-    els.status.innerHTML = '<span class="online"></span>Connected to DCC Information Hub';
+    els.status.innerHTML = '<span class="online"></span>Online – here to help';
 
     restart();
   } catch (err) {
