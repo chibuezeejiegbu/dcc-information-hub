@@ -100,6 +100,7 @@
   function addBot(html, label = 'Information Hub') {
     const wrap = document.createElement('div');
     wrap.className = 'hub-entry bot-entry';
+    if (label === 'Welcome') wrap.classList.add('welcome');
     wrap.innerHTML = `<div class="welcome-label">${escapeHtml(label)}</div><div class="message">${html}</div>`;
     els.chat.appendChild(wrap);
     scrollChat();
@@ -245,7 +246,7 @@ async function recordContactEvent(entryPoint, context = null) {
   state.stack = [];
   state.isMainMenu = true;
 
-  addBot('<strong>Welcome!</strong><br><span class="welcome-sub">What would you like to know?</span>');
+  addBot('<span class="welcome-title">Welcome!</span><span class="welcome-sub">What would you like to know?</span>', 'Welcome');
 
   addMenu([
     {label:'Church Information / Services', action:() => churchMenu()},
