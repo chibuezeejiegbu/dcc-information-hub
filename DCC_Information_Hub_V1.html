@@ -600,18 +600,18 @@ body{min-height:100vh;background:radial-gradient(ellipse at 88% 7%,rgba(91,65,19
 body::before{opacity:.22;background-size:56px 56px}
 .page{width:min(1530px,calc(100% - 9.5vw));min-height:100vh}
 header{height:112px;flex:0 0 112px}
-.brand{gap:14px}.brand img{width:48px;height:56px}.brand-name{font-size:15px;letter-spacing:.015em}.brand-sub{font-size:12px;letter-spacing:.01em;color:#d2d5e3}
-.header-title{font-size:16px;letter-spacing:.015em;font-weight:650}.prototype{display:none!important}
+.brand{gap:14px}.brand img{width:43px;height:50px}.brand-name{font-size:13.5px;letter-spacing:.015em}.brand-sub{font-size:10.8px;letter-spacing:.01em;color:#d2d5e3}
+.header-title{font-size:14.4px;letter-spacing:.015em;font-weight:650}.prototype{display:none!important}
 main{flex:1;grid-template-columns:minmax(0,1fr) minmax(0,1.04fr);gap:clamp(44px,5.1vw,92px);align-items:center;padding:7px 0 28px}
 .intro{width:100%;max-width:650px;padding:0 0 0 8px;transform:translateY(2px)}
 .hero-rule{width:70px;height:2px;background:var(--dcc-purple);margin-bottom:24px}
 .eyebrow{display:none}
-h1{font-size:clamp(48px,4.05vw,70px);line-height:1.12;letter-spacing:-.045em;font-weight:760}
+h1{font-size:clamp(43px,3.65vw,63px);line-height:1.12;letter-spacing:-.045em;font-weight:760}
 .accent{color:var(--dcc-purple-bright)}
-.intro p{max-width:590px;margin:18px 0 30px;color:#c4cce4;font-size:clamp(17px,1.35vw,22px);line-height:1.55}
-.week-card{position:relative;isolation:isolate;display:flex;align-items:center;min-height:290px;width:100%;overflow:hidden;border:1px solid rgba(169,140,255,.92);border-radius:27px;text-decoration:none;color:#fff;background:radial-gradient(ellipse at 70% 20%,rgba(255,159,140,.42),transparent 22%),radial-gradient(ellipse at 78% 65%,rgba(159,130,255,.34),transparent 38%),linear-gradient(110deg,#10172b 0%,#11162c 48%,#49317f 100%);box-shadow:0 18px 55px rgba(0,0,0,.18),inset 0 0 0 1px rgba(255,255,255,.035);transition:transform .2s,border-color .2s,box-shadow .2s}
+.intro p{max-width:590px;margin:16px 0 27px;color:#c4cce4;font-size:clamp(15.3px,1.22vw,19.8px);line-height:1.55}
+.week-card{position:relative;isolation:isolate;display:block;min-height:290px;width:100%;overflow:hidden;border:1px solid rgba(169,140,255,.92);border-radius:27px;text-decoration:none;color:#fff;background:#10172b url("dcc-this-week-card.jpg") center/cover no-repeat;box-shadow:0 18px 55px rgba(0,0,0,.18),inset 0 0 0 1px rgba(255,255,255,.035);transition:transform .2s,border-color .2s,box-shadow .2s}
 .week-card:hover,.week-card:focus-visible{transform:translateY(-3px);border-color:#c3b0ff;box-shadow:0 22px 65px rgba(0,0,0,.28),0 0 0 3px rgba(169,140,255,.13);outline:none}
-.week-card-copy{position:relative;z-index:3;display:flex;flex-direction:column;align-items:flex-start;padding:34px 36px}
+.week-card-copy,.week-art,.week-arrow{display:none!important}
 .week-calendar{display:block;width:43px;height:43px;margin-bottom:17px;color:white}.week-calendar svg{width:100%;height:100%}
 .week-title{font-size:clamp(38px,3.2vw,58px);font-weight:760;line-height:1.05;letter-spacing:-.04em}.week-title strong{color:var(--dcc-purple-bright);font-weight:760}
 .week-art{position:absolute;z-index:1;inset:0 0 0 45%;overflow:hidden;background:linear-gradient(115deg,transparent,rgba(34,25,74,.15) 22%,rgba(185,161,255,.25))}
@@ -620,17 +620,17 @@ h1{font-size:clamp(48px,4.05vw,70px);line-height:1.12;letter-spacing:-.045em;fon
 .paper-grid{position:absolute;inset:12% 8%;opacity:.32;background-image:linear-gradient(rgba(65,53,111,.28) 1px,transparent 1px),linear-gradient(90deg,rgba(65,53,111,.28) 1px,transparent 1px);background-size:36px 36px}
 .paper-pin{position:absolute;top:23%;left:38%;width:17px;height:82px;border-radius:50% 50% 7px 7px;background:linear-gradient(90deg,#1b1642,#51409a 55%,#21174e);box-shadow:0 8px 14px rgba(15,10,42,.38);transform:rotate(25deg)}
 .paper-pin:before{content:"";position:absolute;top:-9px;left:-7px;width:31px;height:22px;border-radius:50%;background:linear-gradient(145deg,#7160bd,#211747 75%)}
-.week-dots{display:flex;justify-content:center;gap:8px;margin-top:17px}.week-dots span{width:7px;height:7px;border-radius:50%;background:rgba(195,184,255,.34)}.week-dots .active{width:22px;border-radius:99px;background:#a98cff}
+.week-dots{display:none!important}
 .chat-shell{justify-self:stretch;width:100%;max-width:690px;height:min(78vh,760px);min-height:650px;display:flex;flex-direction:column;border:1px solid rgba(151,133,225,.2);border-radius:29px;background:rgba(9,14,31,.88);box-shadow:0 30px 90px rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.018);backdrop-filter:blur(22px)}
 .chat-head{flex:0 0 87px;min-height:87px;padding:18px 23px;border-bottom:1px solid rgba(255,255,255,.045);background:rgba(255,255,255,.018)}
 .bot-avatar{width:52px;height:52px;border-radius:16px;font-size:25px}.bot-name{font-size:19px;font-weight:650}.bot-status{color:#c2c9e2;font-size:14px;margin-top:4px}.online{width:9px;height:9px;margin-right:7px}
 .chat-head>div:last-child{color:#b9a9ff!important;font-size:22px!important;letter-spacing:3px}
-.chat-body{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto;padding:12px 23px 22px;gap:0;justify-content:flex-start;scrollbar-width:thin;scrollbar-color:rgba(178,177,197,.55) transparent}
-.chat-body::-webkit-scrollbar{width:8px}.chat-body::-webkit-scrollbar-track{background:transparent}.chat-body::-webkit-scrollbar-thumb{background:rgba(178,177,197,.48);border-radius:99px}
+.chat-body{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto;padding:12px 23px 22px;gap:0;justify-content:flex-start;scrollbar-width:none;scrollbar-color:transparent transparent}
+.chat-body::-webkit-scrollbar{display:none;width:0;height:0}
 .hub-entry{max-width:100%;margin-top:0}.welcome-label{display:none}.welcome{width:100%;margin:0 0 12px}
 .message{width:100%;min-height:92px;display:flex;align-items:center;gap:23px;padding:18px 24px;border:0;border-radius:17px;background:linear-gradient(105deg,#151d37,#17213d);color:#d5dcf7;font-size:18px;line-height:1.45}
-.welcome .message:before{content:"👋";display:grid;place-items:center;flex:0 0 45px;width:45px;height:45px;font-size:34px}
-.message strong{color:#fff;font-weight:650}
+.welcome .message:before{content:"👋";display:grid;place-items:center;flex:0 0 45px;width:45px;height:45px;font-size:34px;filter:hue-rotate(238deg) saturate(1.7)}
+.message strong{color:#fff;font-weight:700}.welcome-sub{color:#b9c2df;font-weight:400}
 .hub-menu.dcc-main-menu{gap:7px;margin-top:0}
 .hub-menu.dcc-main-menu .hub-option{min-height:79px;align-items:center;padding:12px 48px 12px 94px;border:1px solid rgba(255,255,255,.025);border-radius:17px;background:linear-gradient(105deg,rgba(21,29,53,.98),rgba(19,27,49,.98));transition:background .18s,border-color .18s,transform .18s}
 .hub-menu.dcc-main-menu .hub-option:hover,.hub-menu.dcc-main-menu .hub-option:focus-visible{background:linear-gradient(105deg,#202849,#1a2341);border-color:rgba(169,140,255,.35);transform:translateY(-1px)}
@@ -641,7 +641,7 @@ h1{font-size:clamp(48px,4.05vw,70px);line-height:1.12;letter-spacing:-.045em;fon
 .hub-menu.dcc-main-menu .hub-option:after{content:"";display:block;position:absolute;right:21px;top:50%;width:10px;height:10px;border-top:2px solid #b6b9ff;border-right:2px solid #b6b9ff;transform:translateY(-50%) rotate(45deg)}
 .hub-utility{gap:9px}.hub-utility-btn{padding:9px 13px;font-size:12px}.md-result{line-height:1.6}.input-wrap{display:none!important}
 @media(max-width:1100px){.page{width:min(100% - 44px,900px)}main{grid-template-columns:1fr;gap:34px;padding:20px 0 40px}.intro{max-width:690px}.chat-shell{justify-self:stretch;max-width:none;height:720px}.week-card{min-height:260px}}
-@media(max-width:600px){.page{width:calc(100% - 28px)}header{height:82px;flex-basis:82px}.brand img{width:40px;height:46px}.brand-copy{display:flex}.brand-name{font-size:10px}.brand-sub{font-size:8px}.header-title{display:none}main{gap:26px;padding-top:14px}.intro{padding-left:0}.hero-rule{margin-bottom:17px}h1{font-size:clamp(39px,11vw,54px)}.intro p{font-size:15px;margin:14px 0 21px}.week-card{min-height:215px;border-radius:21px}.week-card-copy{padding:24px}.week-calendar{width:34px;height:34px;margin-bottom:12px}.week-title{font-size:39px}.chat-shell{height:690px;min-height:590px;border-radius:22px}.chat-head{flex-basis:75px;min-height:75px;padding:12px 14px}.bot-avatar{width:44px;height:44px;font-size:21px}.bot-name{font-size:16px}.bot-status{font-size:12px}.chat-body{padding:12px 12px 18px}.message{min-height:76px;padding:14px;gap:13px;font-size:15px}.welcome .message:before{flex-basis:34px;width:34px;height:34px;font-size:27px}.hub-menu.dcc-main-menu{gap:7px}.hub-menu.dcc-main-menu .hub-option{min-height:72px;padding:10px 34px 10px 68px;border-radius:14px}.hub-menu.dcc-main-menu .hub-option:before{left:9px;width:43px;height:43px;background-size:24px 24px}.hub-menu.dcc-main-menu .hub-number{width:20px;flex-basis:20px;margin-right:5px;font-size:13px}.hub-menu.dcc-main-menu .hub-option>span:last-child{font-size:13px}.hub-menu.dcc-main-menu .hub-option>span:last-child:after{font-size:11px;margin-top:4px}.hub-menu.dcc-main-menu .hub-option:after{right:15px;width:8px;height:8px}}
+@media(max-width:600px){.page{width:calc(100% - 28px)}header{height:82px;flex-basis:82px}.brand img{width:40px;height:46px}.brand-copy{display:flex}.brand-name{font-size:10px}.brand-sub{font-size:8px}.header-title{display:none}main{gap:26px;padding-top:14px}.intro{padding-left:0}.hero-rule{margin-bottom:17px}h1{font-size:clamp(35px,9.9vw,49px)}.intro p{font-size:13.5px;margin:13px 0 19px}.week-card{min-height:215px;border-radius:21px}.week-card-copy{padding:24px}.week-calendar{width:34px;height:34px;margin-bottom:12px}.week-title{font-size:39px}.chat-shell{height:690px;min-height:590px;border-radius:22px}.chat-head{flex-basis:75px;min-height:75px;padding:12px 14px}.bot-avatar{width:44px;height:44px;font-size:21px}.bot-name{font-size:16px}.bot-status{font-size:12px}.chat-body{padding:12px 12px 18px}.message{min-height:76px;padding:14px;gap:13px;font-size:15px}.welcome .message:before{flex-basis:34px;width:34px;height:34px;font-size:27px}.hub-menu.dcc-main-menu{gap:7px}.hub-menu.dcc-main-menu .hub-option{min-height:72px;padding:10px 34px 10px 68px;border-radius:14px}.hub-menu.dcc-main-menu .hub-option:before{left:9px;width:43px;height:43px;background-size:24px 24px}.hub-menu.dcc-main-menu .hub-number{width:20px;flex-basis:20px;margin-right:5px;font-size:13px}.hub-menu.dcc-main-menu .hub-option>span:last-child{font-size:13px}.hub-menu.dcc-main-menu .hub-option>span:last-child:after{font-size:11px;margin-top:4px}.hub-menu.dcc-main-menu .hub-option:after{right:15px;width:8px;height:8px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition-duration:.01ms!important}}
 </style>
 
@@ -672,9 +672,7 @@ h1{font-size:clamp(48px,4.05vw,70px);line-height:1.12;letter-spacing:-.045em;fon
             <span class="week-title">DCC<br><strong>This Week</strong></span>
           </span>
           <span class="week-art" aria-hidden="true"><span class="week-glow"></span><span class="week-paper"><span class="paper-grid"></span><span class="paper-pin"></span></span></span>
-          <span class="week-arrow" aria-hidden="true">↗</span>
         </a>
-        <div class="week-dots" aria-hidden="true"><span class="active"></span><span></span><span></span><span></span></div>
       </section>
 
       <section class="chat-shell" aria-label="Information Hub chatbot">
