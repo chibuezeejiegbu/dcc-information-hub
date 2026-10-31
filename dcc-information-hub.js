@@ -245,7 +245,7 @@ async function recordContactEvent(entryPoint, context = null) {
   state.stack = [];
   state.isMainMenu = true;
 
-  addBot('<strong>Welcome!<br>What would you like to know?</strong>');
+  addBot('<strong>Welcome!</strong><br><span class="welcome-sub">What would you like to know?</span>');
 
   addMenu([
     {label:'Church Information / Services', action:() => churchMenu()},
