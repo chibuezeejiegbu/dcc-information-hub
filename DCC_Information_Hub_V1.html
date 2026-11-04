@@ -45,12 +45,12 @@
   }
 
   .page {
-    width: min(1180px, calc(100% - 40px));
-    margin: 0 auto;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
+  width: min(1520px, calc(100% - 64px));
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
 
   header {
     height: 88px;
@@ -117,18 +117,18 @@
   }
 
   main {
-    flex: 1;
-    display: grid;
-    grid-template-columns: .82fr 1.18fr;
-    gap: 52px;
-    align-items: center;
-    padding: 34px 0 58px;
-  }
+  flex: 1;
+  display: grid;
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: 64px;
+  align-items: center;
+  padding: 24px 0 40px;
+}
 
   .intro {
-    max-width: 470px;
-    padding-bottom: 28px;
-  }
+  max-width: 650px;
+  padding-bottom: 0;
+}
 
   .eyebrow {
     display: inline-flex;
@@ -184,17 +184,16 @@
   }
 
   .chat-shell {
-    width: 100%;
-    max-width: 640px;
-    justify-self: end;
-    background: rgba(11,15,36,.84);
-    border: 1px solid rgba(255,255,255,.12);
-    border-radius: 26px;
-    box-shadow: 0 30px 90px rgba(0,0,0,.42), 0 0 0 1px rgba(118,103,217,.04);
-    backdrop-filter: blur(20px);
-    overflow: hidden;
-  }
-
+  width: 100%;
+  max-width: 684px;
+  justify-self: end;
+  background: rgba(11,15,36,.84);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 26px;
+  box-shadow: 0 30px 90px rgba(0,0,0,.42), 0 0 0 1px rgba(118,103,217,.04);
+  backdrop-filter: blur(20px);
+  overflow: hidden;
+}
   .chat-head {
     min-height: 70px;
     padding: 16px 20px;
