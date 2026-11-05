@@ -77,6 +77,18 @@ app.get('/dcc-information-hub.js', (req, res) => {
     return res.sendFile(__dirname + '/dcc-information-hub.js');
 });
 
+app.get('/dcc-this-week-card.png', (req, res) => {
+    res.sendFile(__dirname + '/dcc-this-week-card.png', (err) => {
+        if (err) {
+            console.error('Failed to serve DCC This Week image:', err.message);
+
+            if (!res.headersSent) {
+                res.status(err.statusCode || 500).end();
+            }
+        }
+    });
+});
+
 const knowledgeFiles = [
     '01-faqs-identity.md',
     '02-events-calendar.md',
