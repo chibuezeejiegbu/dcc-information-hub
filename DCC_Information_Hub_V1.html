@@ -666,8 +666,21 @@ h1{font-size:clamp(43px,3.65vw,63px);line-height:1.12;letter-spacing:-.045em;fon
 .chat-head{flex:0 0 87px;min-height:87px;padding:18px 23px;border-bottom:1px solid rgba(255,255,255,.045);background:rgba(255,255,255,.018)}
 .bot-avatar{width:52px;height:52px;border-radius:16px;font-size:25px}.bot-name{font-size:19px;font-weight:650}.bot-status{color:#c2c9e2;font-size:14px;margin-top:4px}.online{width:9px;height:9px;margin-right:7px}
 .chat-head>div:last-child{color:#b9a9ff!important;font-size:22px!important;letter-spacing:3px}
-.chat-body{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto;padding:12px 23px 22px;gap:0;justify-content:flex-start;scrollbar-width:none;scrollbar-color:transparent transparent}
-.chat-body::-webkit-scrollbar{display:none;width:0;height:0}
+.chat-body{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto;padding:12px 23px 22px;gap:0;justify-content:flex-start;scrollbar-width: thin;
+scrollbar-color: rgba(169,140,255,.55) transparent;}
+.chat-body::-webkit-scrollbar {
+    display: block;
+    width: 6px;
+}
+
+.chat-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.chat-body::-webkit-scrollbar-thumb {
+    background: rgba(169,140,255,.55);
+    border-radius: 10px;
+}
 .hub-entry{max-width:100%;margin-top:0}.welcome-label{display:none}.welcome{width:100%;margin:0 0 12px}
 .message{width:100%;min-height:92px;display:flex;align-items:center;gap:23px;padding:18px 24px;border:0;border-radius:17px;background:linear-gradient(105deg,#151d37,#17213d);color:#d5dcf7;font-size:18px;line-height:1.45}
 .welcome .message:before{content:"👋";display:grid;place-items:center;flex:0 0 45px;width:45px;height:45px;font-size:34px;filter:hue-rotate(238deg) saturate(1.7)}
