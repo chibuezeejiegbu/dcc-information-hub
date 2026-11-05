@@ -598,11 +598,26 @@
 :root{--dcc-purple:#9878ff;--dcc-purple-bright:#a98cff}
 body{min-height:100vh;background:radial-gradient(ellipse at 88% 7%,rgba(91,65,190,.26),transparent 34%),radial-gradient(ellipse at 4% 90%,rgba(54,70,145,.18),transparent 38%),linear-gradient(118deg,#080d1b 0%,#0a1021 54%,#11102b 100%)}
 body::before{opacity:.22;background-size:56px 56px}
-.page{width:min(1530px,calc(100% - 9.5vw));min-height:100vh}
-header{height:112px;flex:0 0 112px}
+.page {
+    width: min(1530px, calc(100% - 80px));
+    min-height: 100vh;
+    margin: 0 auto;
+}
+
+header {
+    height: 100px;
+    flex: 0 0 100px;
+}
 .brand{gap:14px}.brand img{width:43px;height:50px}.brand-name{font-size:13.5px;letter-spacing:.015em}.brand-sub{font-size:10.8px;letter-spacing:.01em;color:#d2d5e3}
 .header-title{font-size:14.4px;letter-spacing:.015em;font-weight:650}.prototype{display:none!important}
-main{flex:1;grid-template-columns:minmax(0,1fr) minmax(0,1.04fr);gap:clamp(44px,5.1vw,92px);align-items:center;padding:7px 0 28px}
+main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    gap: clamp(40px, 4vw, 72px);
+    align-items: center;
+    padding: 7px 0 28px;
+}
 .intro{width:100%;max-width:650px;padding:0 0 0 8px;transform:translateY(2px)}
 .hero-rule{width:70px;height:2px;background:var(--dcc-purple);margin-bottom:24px}
 .eyebrow{display:none}
@@ -621,7 +636,21 @@ h1{font-size:clamp(43px,3.65vw,63px);line-height:1.12;letter-spacing:-.045em;fon
 .paper-pin{position:absolute;top:23%;left:38%;width:17px;height:82px;border-radius:50% 50% 7px 7px;background:linear-gradient(90deg,#1b1642,#51409a 55%,#21174e);box-shadow:0 8px 14px rgba(15,10,42,.38);transform:rotate(25deg)}
 .paper-pin:before{content:"";position:absolute;top:-9px;left:-7px;width:31px;height:22px;border-radius:50%;background:linear-gradient(145deg,#7160bd,#211747 75%)}
 .week-dots{display:none!important}
-.chat-shell{justify-self:stretch;width:100%;max-width:690px;height:min(78vh,760px);min-height:650px;display:flex;flex-direction:column;border:1px solid rgba(151,133,225,.2);border-radius:29px;background:rgba(9,14,31,.88);box-shadow:0 30px 90px rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.018);backdrop-filter:blur(22px)}
+.chat-shell {
+    justify-self: stretch;
+    width: 100%;
+    max-width: 690px;
+    height: min(82vh, 760px);
+    min-height: 650px;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(151,133,225,.2);
+    border-radius: 29px;
+    background: rgba(9,14,31,.88);
+    box-shadow: 0 30px 90px rgba(0,0,0,.3),
+                0 0 0 1px rgba(255,255,255,.018);
+    backdrop-filter: blur(22px);
+}
 .chat-head{flex:0 0 87px;min-height:87px;padding:18px 23px;border-bottom:1px solid rgba(255,255,255,.045);background:rgba(255,255,255,.018)}
 .bot-avatar{width:52px;height:52px;border-radius:16px;font-size:25px}.bot-name{font-size:19px;font-weight:650}.bot-status{color:#c2c9e2;font-size:14px;margin-top:4px}.online{width:9px;height:9px;margin-right:7px}
 .chat-head>div:last-child{color:#b9a9ff!important;font-size:22px!important;letter-spacing:3px}
@@ -655,7 +684,8 @@ h1{font-size:clamp(43px,3.65vw,63px);line-height:1.12;letter-spacing:-.045em;fon
 .welcome-title{display:block;color:#fff;font-weight:700}
 .welcome-sub{display:block;color:#b9c2df;font-weight:400}
 @media(max-width:600px){.welcome .message{min-height:76px;padding:14px;gap:13px;font-size:15px}.welcome .message:before{flex-basis:34px;width:34px;height:34px;font-size:27px}}
-</style>\n</head>
+</style>
+</head>
 <body>
   <div class="page">
     <header>
