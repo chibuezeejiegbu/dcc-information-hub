@@ -817,6 +817,125 @@ scrollbar-color: rgba(169,140,255,.55) transparent;}
 }
 }
 </style>
+  
+<style>
+/* =========================================
+   DCC SUBMENU DESIGN — BATCH 1
+   Applies to all menus except the main menu
+========================================= */
+
+.hub-menu:not(.dcc-main-menu) {
+    display: grid;
+    gap: 8px;
+    margin-top: 14px;
+    width: 100%;
+}
+
+.hub-menu:not(.dcc-main-menu) .hub-menu-title {
+    color: #b9a9ff;
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: .06em;
+    margin-bottom: 3px;
+}
+
+.hub-menu:not(.dcc-main-menu) .hub-option {
+    width: 100%;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+
+    border: 1px solid rgba(169,140,255,.13);
+    border-radius: 12px;
+
+    background: linear-gradient(
+        105deg,
+        rgba(21,29,53,.98),
+        rgba(19,27,49,.98)
+    );
+
+    color: #edf0fa;
+    text-align: left;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 550;
+    line-height: 1.4;
+
+    cursor: pointer;
+    transition:
+        background .18s ease,
+        border-color .18s ease,
+        transform .18s ease;
+}
+
+.hub-menu:not(.dcc-main-menu) .hub-option:hover,
+.hub-menu:not(.dcc-main-menu) .hub-option:focus-visible {
+    background: linear-gradient(
+        105deg,
+        rgba(39,45,78,.98),
+        rgba(27,35,65,.98)
+    );
+    border-color: rgba(169,140,255,.48);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.hub-menu:not(.dcc-main-menu) .hub-number {
+    width: 25px;
+    height: 25px;
+    flex: 0 0 25px;
+
+    display: grid;
+    place-items: center;
+
+    border: 1px solid rgba(169,140,255,.17);
+    border-radius: 8px;
+
+    background: rgba(118,103,217,.19);
+    color: #c5b8ff;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.hub-menu:not(.dcc-main-menu) .hub-option > span:last-child {
+    min-width: 0;
+    display: block;
+    color: #edf0fa;
+    font-size: 13px;
+    font-weight: 550;
+    line-height: 1.4;
+}
+
+/* Mobile submenu adjustments */
+@media (max-width: 600px) {
+    .hub-menu:not(.dcc-main-menu) {
+        gap: 7px;
+        margin-top: 12px;
+    }
+
+    .hub-menu:not(.dcc-main-menu) .hub-option {
+        min-height: 44px;
+        padding: 9px 11px;
+        gap: 10px;
+        border-radius: 11px;
+        font-size: 12px;
+    }
+
+    .hub-menu:not(.dcc-main-menu) .hub-number {
+        width: 23px;
+        height: 23px;
+        flex-basis: 23px;
+        font-size: 10px;
+    }
+
+    .hub-menu:not(.dcc-main-menu) .hub-option > span:last-child {
+        font-size: 12px;
+    }
+}
+</style>
 </head>
 <body>
   <div class="page">
