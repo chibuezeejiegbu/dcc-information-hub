@@ -1115,7 +1115,134 @@ scrollbar-color: rgba(169,140,255,.55) transparent;}
 .hub-menu.dcc-main-menu .hub-option:nth-child(1) > span:last-child::after {
     content: "Service times, locations and more";
 }
-</style>  
+</style>
+<style>
+/* =========================================
+   DCC DISPLAY — BATCH 3
+   A) Utility buttons (Back / Main menu /
+      Contact Our Team): larger, clearer,
+      comfortable tap size
+   B) Submenus: chevron + "1." numbering to
+      echo the main menu (lighter variant)
+   Scoped: .hub-utility and
+   .hub-menu:not(.dcc-main-menu) only.
+========================================= */
+
+/* ---- A) Utility buttons ---- */
+.hub-utility {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.hub-utility-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 16px;
+    border: 1px solid rgba(169,140,255,.22);
+    border-radius: 12px;
+    background: rgba(118,103,217,.10);
+    color: #d9dcf0;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+}
+
+.hub-utility-btn:hover,
+.hub-utility-btn:focus-visible {
+    background: rgba(118,103,217,.22);
+    border-color: rgba(169,140,255,.55);
+    color: #fff;
+    transform: translateY(-1px);
+    outline: none;
+}
+
+.hub-utility-btn:focus-visible {
+    box-shadow: 0 0 0 3px rgba(118,103,217,.25);
+}
+
+@media (max-width: 600px) {
+    .hub-utility-btn {
+        flex: 1 1 auto;
+        min-height: 44px;
+        padding: 0 12px;
+    }
+}
+
+/* ---- B) Submenus: echo the main menu, lighter ---- */
+.hub-menu:not(.dcc-main-menu) .hub-option {
+    position: relative;
+    min-height: 52px;
+    padding: 12px 44px 12px 16px;
+    gap: 4px;
+    border-radius: 14px;
+    font-size: 14px;
+}
+
+.hub-menu:not(.dcc-main-menu) .hub-option > span:last-child {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Plain "1." numbering like the main menu (no box) */
+.hub-menu:not(.dcc-main-menu) .hub-number {
+    width: auto;
+    min-width: 22px;
+    height: auto;
+    flex: 0 0 auto;
+    display: inline-block;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #c5b8ff;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: left;
+}
+
+.hub-menu:not(.dcc-main-menu) .hub-number::after {
+    content: ".";
+}
+
+/* Same chevron as the main menu, slightly softer */
+.hub-menu:not(.dcc-main-menu) .hub-option::after {
+    content: "";
+    display: block;
+    position: absolute;
+    right: 19px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-top: 2px solid rgba(182,185,255,.8);
+    border-right: 2px solid rgba(182,185,255,.8);
+    transform: translateY(-50%) rotate(45deg);
+}
+
+@media (max-width: 600px) {
+    .hub-menu:not(.dcc-main-menu) .hub-option {
+        min-height: 48px;
+        padding: 11px 38px 11px 13px;
+        font-size: 13px;
+    }
+
+    .hub-menu:not(.dcc-main-menu) .hub-option > span:last-child,
+    .hub-menu:not(.dcc-main-menu) .hub-number {
+        font-size: 13px;
+    }
+
+    .hub-menu:not(.dcc-main-menu) .hub-option::after {
+        right: 16px;
+        width: 7px;
+        height: 7px;
+    }
+}
+</style>
 </head>
 <body>
   <div class="page">
