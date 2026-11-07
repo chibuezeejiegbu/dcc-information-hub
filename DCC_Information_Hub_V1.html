@@ -936,6 +936,186 @@ scrollbar-color: rgba(169,140,255,.55) transparent;}
     }
 }
 </style>
+<style>
+/* =========================================
+   DCC DISPLAY — BATCH 2
+   A) Contact the Team form styling
+   B) Main-menu icons for options 3, 5, 6, 7, 8
+   C) Option 1 subtitle copy
+   Scoped: affects only .contact-form and
+   .dcc-main-menu options 1, 3, 5, 6, 7, 8.
+========================================= */
+
+/* ---- A) Contact the Team (WhatsApp) form ---- */
+.contact-form {
+    display: grid;
+    gap: 14px;
+    margin-top: 14px;
+}
+
+.contact-field {
+    display: grid;
+    gap: 7px;
+}
+
+.contact-field > label {
+    color: #c5b8ff;
+    font-size: 12px;
+    font-weight: 650;
+    letter-spacing: .02em;
+}
+
+.contact-input {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 44px;
+    padding: 10px 14px;
+    border: 1px solid rgba(169,140,255,.18);
+    border-radius: 12px;
+    background: rgba(9,13,30,.75);
+    color: #edf0fa;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.4;
+    transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.contact-input::placeholder {
+    color: #7d84a0;
+}
+
+.contact-input:focus {
+    outline: none;
+    border-color: rgba(169,140,255,.6);
+    box-shadow: 0 0 0 3px rgba(118,103,217,.22);
+}
+
+.contact-radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.contact-radio {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid rgba(169,140,255,.18);
+    border-radius: 12px;
+    background: rgba(9,13,30,.75);
+    color: #edf0fa;
+    font-size: 14px;
+    cursor: pointer;
+    transition: border-color .18s ease, background .18s ease;
+}
+
+.contact-radio:hover {
+    border-color: rgba(169,140,255,.45);
+}
+
+.contact-radio input {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    border: 1.5px solid rgba(197,184,255,.55);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+}
+
+.contact-radio input::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #a99eff;
+    transform: scale(0);
+    transition: transform .15s ease;
+}
+
+.contact-radio input:checked {
+    border-color: #a99eff;
+}
+
+.contact-radio input:checked::before {
+    transform: scale(1);
+}
+
+.contact-radio:has(input:checked) {
+    border-color: rgba(169,140,255,.6);
+    background: rgba(118,103,217,.16);
+}
+
+.contact-radio input:focus-visible {
+    outline: 2px solid rgba(169,140,255,.7);
+    outline-offset: 2px;
+}
+
+.contact-submit {
+    justify-self: start;
+    min-height: 44px;
+    margin-top: 4px;
+    padding: 0 26px;
+    border: 0;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #8b7cf6, #6a58d6);
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 650;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(106,88,214,.28);
+    transition: filter .18s ease, transform .18s ease, opacity .18s ease;
+}
+
+.contact-submit:hover:not(:disabled),
+.contact-submit:focus-visible {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+    outline: none;
+}
+
+.contact-submit:disabled {
+    background: rgba(118,103,217,.18);
+    color: #8f96ad;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+    .contact-submit {
+        justify-self: stretch;
+    }
+}
+
+/* ---- B) Main-menu icons that match each option's meaning ---- */
+/* 3 Sermons = play; 5 Giving = giving hand; 6 Pastors = people; 7 Resources = book; 8 Contact = headset */
+.hub-menu.dcc-main-menu .hub-option:nth-child(3)::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d4baff' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='m10 8.7 5.2 3.3-5.2 3.3V8.7Z' fill='%23d4baff' stroke='none'/%3E%3C/svg%3E");
+}
+.hub-menu.dcc-main-menu .hub-option:nth-child(5)::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d4baff' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 12.5h4l2.2 2h4.1c1.1 0 1.8-.7 1.8-1.6s-.7-1.5-1.7-1.5h-2.4'/%3E%3Cpath d='m7.5 12.5 2.2-2.1c.6-.5 1.2-.8 2-.8h3.1c1 0 1.7.6 1.7 1.5'/%3E%3Cpath d='M3.5 12.5v5h3l2.1 1.1c.6.3 1.2.4 1.8.4h4.1c.7 0 1.3-.2 1.8-.7l4.2-4.1c.7-.7.7-1.7 0-2.3-.6-.6-1.5-.6-2.2 0l-2.5 2.1'/%3E%3Cpath d='M3.5 12.5V10h3.2l2.1-1.3c.5-.3 1-.5 1.6-.5h2.1'/%3E%3C/svg%3E");
+}
+.hub-menu.dcc-main-menu .hub-option:nth-child(6)::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d4baff' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='7.5' r='3'/%3E%3Cpath d='M6.5 19.5v-1.2a5.5 5.5 0 0 1 11 0v1.2'/%3E%3Cpath d='M5.2 10.2a2.5 2.5 0 0 0 0 4.8M3.5 19v-.7a4 4 0 0 1 2.2-3.6'/%3E%3Cpath d='M18.8 10.2a2.5 2.5 0 0 1 0 4.8M20.5 19v-.7a4 4 0 0 0-2.2-3.6'/%3E%3C/svg%3E");
+}
+.hub-menu.dcc-main-menu .hub-option:nth-child(7)::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d4baff' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 6.5c-2.1-1.6-5.1-2.1-8.5-1.5v13c3.4-.6 6.4-.1 8.5 1.5'/%3E%3Cpath d='M12 6.5c2.1-1.6 5.1-2.1 8.5-1.5v13c-3.4-.6-6.4-.1-8.5 1.5'/%3E%3Cpath d='M12 6.5v13'/%3E%3C/svg%3E");
+}
+.hub-menu.dcc-main-menu .hub-option:nth-child(8)::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d4baff' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 13v-1a8 8 0 0 1 16 0v1'/%3E%3Cpath d='M4 12.5h2.5a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5H6A2 2 0 0 1 4 16.5z'/%3E%3Cpath d='M20 12.5h-2.5A1.5 1.5 0 0 0 16 14v3a1.5 1.5 0 0 0 1.5 1.5H18a2 2 0 0 0 2-2z'/%3E%3Cpath d='M16 20h-3'/%3E%3C/svg%3E");
+}
+
+/* ---- C) Option 1 subtitle (First Timers now lives under Forms) ---- */
+.hub-menu.dcc-main-menu .hub-option:nth-child(1) > span:last-child::after {
+    content: "Service times, locations and more";
+}
+</style>  
 </head>
 <body>
   <div class="page">
