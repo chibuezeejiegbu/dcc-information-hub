@@ -98,7 +98,7 @@
           : '') +
         '<span class="tw-card-body">' +
         (card.tag ? `<span class="tw-tag">${escapeHtml(card.tag)}</span>` : '') +
-        `<span class="tw-title">${escapeHtml(card.title)}</span>` +
+        `<span class="tw-title${card.title.length > 30 ? ' tw-title--long' : ''}">${escapeHtml(card.title)}</span>` +
         (card.when ? `<span class="tw-when">${escapeHtml(card.when)}</span>` : '') +
         '<span class="tw-more" aria-hidden="true">View details</span>' +
         '</span>';
