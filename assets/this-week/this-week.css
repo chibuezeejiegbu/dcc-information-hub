@@ -295,7 +295,7 @@
     z-index: 1000;
     display: grid;
     place-items: center;
-    padding: 16px;
+    padding: 10px;
 }
 
 .tw-modal[hidden] {
@@ -312,9 +312,9 @@
 
 .tw-modal-frame {
     position: relative;
-    width: min(100%, calc((100dvh - 150px) * .8), 560px);
+    width: min(100%, calc((100dvh - 136px) * .8), 640px);
     display: grid;
-    gap: 14px;
+    gap: 12px;
 }
 
 .tw-modal-top {
@@ -337,7 +337,7 @@
     border-radius: 18px;
     background: #0b1024;
     box-shadow: 0 30px 80px rgba(0,0,0,.55);
-    touch-action: pan-y;
+    touch-action: pan-y pinch-zoom;
 }
 
 .tw-modal-stage img {
@@ -345,6 +345,9 @@
     height: 100%;
     object-fit: contain;
     display: block;
+    /* Slight zoom: trims only the empty page margin (about 2.5% each side),
+       so the page contents read larger. */
+    transform: scale(1.05);
     user-select: none;
     -webkit-user-drag: none;
 }
