@@ -837,10 +837,22 @@ async function workforceDepartmentDetails(branch, departmentName) {
   function eventsMenu() {
   const events = getUpcomingEvents();
 
+  // "View DCC This Week" opens the weekly carousel pop-up (assets/this-week).
+  const thisWeek = window.DCCThisWeek;
+  const thisWeekButton = thisWeek && thisWeek.available()
+    ? '<div class="link-row"><button type="button" class="hub-link this-week-open">View DCC This Week</button></div>'
+    : '';
+
   addBot(
     '<strong>Here are the currently scheduled upcoming DCC events.</strong><br>' +
-    'Which event would you like to know more about?'
+    'Which event would you like to know more about?' +
+    thisWeekButton
   );
+
+  const thisWeekOpen = els.chat.querySelector('.this-week-open');
+  if (thisWeekOpen) {
+    thisWeekOpen.addEventListener('click', () => thisWeek.open(1));
+  }
 
   if (!events.length) {
     addBot('There are no upcoming events listed at the moment. Please check again later or contact DCC for updates.');

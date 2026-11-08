@@ -32,6 +32,12 @@ if (
     throw new Error('Missing required database or session configuration.');
 }
 
+// Public images, styles and scripts (e.g. DCC This Week cards and carousel).
+app.use('/assets', express.static(require('path').join(__dirname, 'assets'), {
+    index: false,
+    maxAge: '1h'
+}));
+
 app.use(express.json({ limit: '32kb' }));
 app.use(session({
     name: 'dcc_admin_sid',

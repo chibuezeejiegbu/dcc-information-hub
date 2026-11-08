@@ -1,0 +1,69 @@
+{
+  "_howTo": "Weekly update: replace the images in cards/ and carousel/, then edit this file. A card disappears automatically the day after its endDate (YYYY-MM-DD). 'page' is the carousel page the card opens (1 = cover).",
+  "coverImage": "dcc-this-week-card.webp",
+  "coverPage": 1,
+  "cards": [
+    {
+      "tag": "Mainland & Island",
+      "title": "Plans, Purposes and Pursuits",
+      "when": "Sunday sermon series · All Sundays in November",
+      "image": "cards/1-plans-purposes-pursuits.webp",
+      "page": 3,
+      "endDate": "2026-11-29"
+    },
+    {
+      "tag": "Mainland · For workers",
+      "title": "SHAPEN for Service",
+      "when": "Sundays in November · 6:25 AM",
+      "image": "cards/2-shapen.webp",
+      "page": 4,
+      "endDate": "2026-11-29"
+    },
+    {
+      "tag": "Mainland",
+      "title": "End of Year Praise & Planning Conference",
+      "when": "Saturday 21 November · DCC Business Fellowship",
+      "image": "cards/3-praise-planning-conference.webp",
+      "page": 5,
+      "endDate": "2026-11-21"
+    },
+    {
+      "tag": "Mainland",
+      "title": "Special Meeting for Expectant Mothers",
+      "when": "Saturday 28 November · 9:00 AM",
+      "image": "cards/4-expectant-mothers.webp",
+      "page": 6,
+      "endDate": "2026-11-28"
+    }
+  ],
+  "carousel": [
+    {
+      "image": "carousel/page-01.webp",
+      "alt": "DCC This Week, November 2026"
+    },
+    {
+      "image": "carousel/page-02.webp",
+      "alt": "What's happening: November at a glance. Plans, Purposes and Pursuits, all Sundays in November, Mainland and Island. SHAPEN for Service, Sundays in November, 6:25 AM, for workers. End of Year Praise and Planning Conference 2026, Saturday 21 November, Victory Dome. Special Meeting for Expectant Mothers, Saturday 28 November, 9:00 AM."
+    },
+    {
+      "image": "carousel/page-03.webp",
+      "alt": "Plans, Purposes and Pursuits, Sunday sermon series, all Sundays in November. Mainland, Victory Dome: 1st Service 7:00 to 9:00 AM, 2nd Service 9:00 to 11:00 AM. Island, DCC Lekki: Sunday Service 10:30 AM to 12:30 PM."
+    },
+    {
+      "image": "carousel/page-04.webp",
+      "alt": "SHAPEN for Service, Mainland Workers' Meeting for all DCC workers. All Sundays in November, 6:25 AM, Victory Dome."
+    },
+    {
+      "image": "carousel/page-05.webp",
+      "alt": "DCC Business Fellowship End of Year Praise and Planning Conference 2026. Saturday 21 November 2026, David's Christian Centre, Victory Dome. Guest speakers: Pastor Chikezie Oke and Pastor Debo Adejana."
+    },
+    {
+      "image": "carousel/page-06.webp",
+      "alt": "Special Meeting for Expectant Mothers: a time of fellowship, encouragement and spiritual support for mothers-to-be. Saturday 28 November 2026, 9:00 AM, David's Christian Centre, Victory Dome. What to expect: fellowship with other expectant mothers, encouragement and prayer, practical insights for this season."
+    },
+    {
+      "image": "carousel/page-07.webp",
+      "alt": "Stay in the know. Save this and share it with someone who needs it."
+    }
+  ]
+}
