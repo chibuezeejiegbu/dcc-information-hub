@@ -1243,6 +1243,91 @@ scrollbar-color: rgba(169,140,255,.55) transparent;}
     }
 }
 </style>
+<style>
+/* =========================================
+   DCC DISPLAY — BATCH 4
+   A) In-answer link buttons (Open form,
+   Register, Open official Giving page,
+   View sermons, etc.) styled to match the
+   purple contact-form Submit button.
+   B) Tablet layout (601–1100px only): one
+      aligned column, uncropped This Week card.
+   Scoped: .hub-link; .page/.intro/.week-card
+   on tablet widths only.
+========================================= */
+.link-row {
+    margin-top: 14px;
+}
+
+.hub-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 20px;
+    border: 0;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #8b7cf6, #6a58d6);
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 650;
+    line-height: 1.2;
+    text-decoration: none;
+    box-shadow: 0 6px 18px rgba(106,88,214,.28);
+    transition: filter .18s ease, transform .18s ease;
+}
+
+/* Small arrow: tells users the link opens a new tab */
+.hub-link::after {
+    content: "↗";
+    font-size: 13px;
+    opacity: .85;
+}
+
+.hub-link:hover,
+.hub-link:focus-visible {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+    color: #fff;
+    text-decoration: none;
+    outline: none;
+}
+
+.hub-link:focus-visible {
+    box-shadow: 0 0 0 3px rgba(169,140,255,.45);
+}
+
+@media (max-width: 600px) {
+    .hub-link {
+        display: flex;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 16px;
+        text-align: center;
+    }
+}
+/* ---- B) Tablet (stacked layout, 601–1100px) ----
+   Hero, This Week card and chat share one centred column,
+   and the card keeps the image's 2:1 shape so the artwork
+   is never cropped. */
+@media (min-width: 601px) and (max-width: 1100px) {
+    .page {
+        width: min(100% - 44px, 720px);
+    }
+
+    .intro {
+        max-width: none;
+        padding-left: 0;
+    }
+
+    .week-card {
+        min-height: 0;
+        aspect-ratio: 2 / 1;
+    }
+}
+</style>  
 </head>
 <body>
   <div class="page">
