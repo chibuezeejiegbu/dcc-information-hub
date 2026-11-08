@@ -1,6 +1,11 @@
 {
   "_howTo": "Weekly update: replace the images in cards/ and carousel/, then edit this file. A card disappears automatically the day after its endDate (YYYY-MM-DD). 'page' is the carousel page the card opens (1 = cover).",
-  "coverImage": "dcc-this-week-card.webp",
+  "name": "What’s On at DCC",
+  "coverTitle": [
+    "What’s On",
+    "at DCC"
+  ],
+  "coverImage": "whats-on-cover.webp",
   "coverPage": 1,
   "cards": [
     {
@@ -39,7 +44,7 @@
   "carousel": [
     {
       "image": "carousel/page-01.webp",
-      "alt": "DCC This Week, November 2026"
+      "alt": "What’s On at DCC"
     },
     {
       "image": "carousel/page-02.webp",

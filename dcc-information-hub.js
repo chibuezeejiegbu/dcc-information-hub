@@ -837,21 +837,39 @@ async function workforceDepartmentDetails(branch, departmentName) {
   function eventsMenu() {
   const events = getUpcomingEvents();
 
-  // "View DCC This Week" opens the weekly carousel pop-up (assets/this-week).
+  // The "What's On at DCC" button opens the carousel pop-up (assets/this-week).
   const thisWeek = window.DCCThisWeek;
-  const thisWeekButton = thisWeek && thisWeek.available()
-    ? '<div class="link-row"><button type="button" class="hub-link this-week-open">View DCC This Week</button></div>'
+  const hasCarousel = Boolean(thisWeek && thisWeek.available());
+  const carouselName = hasCarousel ? thisWeek.name() : '';
+  const thisWeekButton = hasCarousel
+    ? `<div class="link-row"><button type="button" class="hub-link this-week-open">View ${escapeHtml(carouselName)}</button></div>`
     : '';
 
-  addBot(
-    '<strong>Here are the currently scheduled upcoming DCC events.</strong><br>' +
-    'Which event would you like to know more about?' +
-    thisWeekButton
-  );
+  if (hasCarousel) {
+    addBot(
+      '<strong>Upcoming DCC events</strong><br>' +
+      (events.length
+        ? `Browse ${escapeHtml(carouselName)}, or choose an event below for details.`
+        : 'See everything coming up at DCC.') +
+      thisWeekButton
+    );
+  } else {
+    addBot(
+      '<strong>Here are the currently scheduled upcoming DCC events.</strong><br>' +
+      'Which event would you like to know more about?'
+    );
+  }
 
   const thisWeekOpen = els.chat.querySelector('.this-week-open');
   if (thisWeekOpen) {
     thisWeekOpen.addEventListener('click', () => thisWeek.open(1));
+  }
+
+  // With the carousel available there is always something to show,
+  // so the "no upcoming events" message is only used without it.
+  if (!events.length && hasCarousel) {
+    addUtilityButtons();
+    return;
   }
 
   if (!events.length) {

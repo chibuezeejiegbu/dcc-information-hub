@@ -1,4 +1,6 @@
-/* DCC This Week — micro-card slider + carousel pop-up
+/* What's On at DCC — micro-card slider + carousel pop-up
+ * (files keep their original 'this-week' names; the visible name comes from
+ * "name" and "coverTitle" in this-week.json).
  * Reads assets/this-week/this-week.json.
  * If the file can't be loaded, the original DCC This Week card stays
  * exactly as it was (linking to Canva), so nothing breaks.
@@ -16,8 +18,10 @@
   let data = null;
   let modal = null;
 
+  const DEFAULT_NAME = 'What’s On at DCC';
   const api = {
     available: () => Boolean(data && Array.isArray(data.carousel) && data.carousel.length),
+    name: () => (data && data.name) || DEFAULT_NAME,
     open: (page = 1) => openModal(page)
   };
   window.DCCThisWeek = api;
@@ -27,7 +31,7 @@
   fetch(BASE + 'this-week.json', { cache: 'no-store' })
     .then(res => (res.ok ? res.json() : Promise.reject(new Error('this-week.json ' + res.status))))
     .then(init)
-    .catch(err => console.warn('DCC This Week: keeping the static card.', err));
+    .catch(err => console.warn("What's On: keeping the static card.", err));
 
   function escapeHtml(value = '') {
     return String(value).replace(/[&<>"']/g, c => (
@@ -62,7 +66,7 @@
     const wrap = document.createElement('div');
     wrap.className = 'tw-wrap';
     wrap.innerHTML =
-      '<section class="tw-slider" aria-roledescription="carousel" aria-label="DCC This Week">' +
+      `<section class="tw-slider" aria-roledescription="carousel" aria-label="${escapeHtml(api.name())}">` +
       '<div class="tw-viewport"><div class="tw-track"></div></div></section>';
     original.replaceWith(wrap);
 
@@ -70,9 +74,19 @@
     const viewport = wrap.querySelector('.tw-viewport');
     const track = wrap.querySelector('.tw-track');
 
-    // Slide 1: the original DCC This Week card, now opening the pop-up.
+    // Slide 1: the original card, now titled from this-week.json and opening the pop-up.
     original.removeAttribute('target');
-    original.setAttribute('aria-label', 'DCC This Week: open this week\'s events');
+    original.setAttribute('aria-label', `${api.name()}: see upcoming events`);
+    const titleLines = Array.isArray(json.coverTitle) && json.coverTitle.length ? json.coverTitle : [api.name()];
+    const cover = document.createElement('span');
+    cover.className = 'tw-cover-copy';
+    cover.setAttribute('aria-hidden', 'true');
+    cover.innerHTML =
+      '<svg class="tw-cover-icon" viewBox="0 0 32 32" fill="none"><rect x="4" y="6" width="24" height="22" rx="3" stroke="currentColor" stroke-width="2.4"/><path d="M10 3.8v5M22 3.8v5M4.5 12h23" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M10 17h3M10 22h3M18 17h4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>' +
+      `<span class="tw-cover-title"><span>${escapeHtml(titleLines[0])}</span>` +
+      (titleLines[1] ? `<strong>${escapeHtml(titleLines[1])}</strong>` : '') +
+      '</span>';
+    original.appendChild(cover);
     original.addEventListener('click', event => {
       if (swiped) { event.preventDefault(); return; }
       if (api.available()) {
@@ -261,11 +275,11 @@
     el.hidden = true;
     el.setAttribute('role', 'dialog');
     el.setAttribute('aria-modal', 'true');
-    el.setAttribute('aria-label', 'DCC This Week');
+    el.setAttribute('aria-label', api.name());
     el.innerHTML =
       '<div class="tw-modal-backdrop"></div>' +
       '<div class="tw-modal-frame">' +
-      '<div class="tw-modal-top"><span>DCC This Week</span>' +
+      `<div class="tw-modal-top"><span>${escapeHtml(api.name())}</span>` +
       `<button type="button" class="tw-btn tw-close" aria-label="Close">${ICON_CLOSE}</button></div>` +
       '<div class="tw-modal-stage"><img alt=""></div>' +
       '<div class="tw-modal-nav">' +

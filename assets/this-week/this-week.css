@@ -59,6 +59,50 @@
     transform: none;
 }
 
+/* Slide 1 title is written by the page (from this-week.json), not baked into the image */
+.tw-slider .week-card {
+    container-type: inline-size;
+}
+
+.tw-slider .week-card-copy,
+.tw-slider .week-art {
+    display: none;
+}
+
+.tw-cover-copy {
+    position: absolute;
+    left: 7cqw;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3.2cqw;
+    padding-bottom: 4cqw;
+    color: #fff;
+    pointer-events: none;
+}
+
+.tw-cover-icon {
+    width: 6.6cqw;
+    height: 6.6cqw;
+    min-width: 22px;
+    min-height: 22px;
+}
+
+.tw-cover-title {
+    display: grid;
+    font-size: clamp(26px, 9.6cqw, 64px);
+    font-weight: 800;
+    line-height: 1.02;
+    letter-spacing: -.035em;
+}
+
+.tw-cover-title strong {
+    color: #a78bfa;
+    font-weight: 800;
+}
+
 /* ---- Micro card ---- */
 .tw-card {
     position: absolute;
