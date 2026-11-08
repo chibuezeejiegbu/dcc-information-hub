@@ -115,6 +115,12 @@
   }
 
   function scrollChat() {
+    // Every screen is drawn into an empty chat, so start at the top:
+    // the heading and first options must be visible, not the end of the list.
+    els.chat.scrollTop = 0;
+  }
+
+  function scrollChatToLatest() {
     els.chat.scrollTop = els.chat.scrollHeight;
   }
 
@@ -143,7 +149,8 @@
       if (!state.isMainMenu) {
         state.stack.push({
           nodes: Array.from(els.chat.children),
-          isMainMenu: state.isMainMenu
+          isMainMenu: state.isMainMenu,
+          scrollTop: els.chat.scrollTop
         });
       }
 
@@ -209,7 +216,8 @@ async function recordContactEvent(entryPoint, context = null) {
       () => {
         state.stack.push({
           nodes: Array.from(els.chat.children),
-          isMainMenu: state.isMainMenu
+          isMainMenu: state.isMainMenu,
+          scrollTop: els.chat.scrollTop
         });
 
         els.chat.innerHTML = '';
@@ -290,7 +298,8 @@ state.currentContext = null;
 
   state.isMainMenu = previousScreen.isMainMenu;
 
-  scrollChat();
+  // Return to the same place in the previous list (e.g. mid-way down Forms).
+  els.chat.scrollTop = previousScreen.scrollTop || 0;
 }
 
   function faqSection(title) {
@@ -578,9 +587,17 @@ function givingBankDetails(bankName) {
     html += '</div>';
   }
 
+  // The currency reminder only matters when this bank lists more than
+  // local (NGN) accounts.
+  const hasForeignCurrency = accounts.some(
+    account => String(account.currency).toUpperCase() !== 'NGN'
+  );
+
   html +=
     '<div class="notice">' +
-    'Please use the account details for the currency you wish to give in. ' +
+    (hasForeignCurrency
+      ? 'Please use the account details for the currency you wish to give in. '
+      : '') +
     'Verify the details on the official DCC giving page before making a transfer.' +
     '</div>';
 
@@ -1372,6 +1389,7 @@ addUtilityButtons();
     );
 
     addUtilityButtons();
+    scrollChatToLatest();
 
   } finally {
     submitButton.disabled = false;
