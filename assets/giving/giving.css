@@ -1,0 +1,304 @@
+/* =========================================
+   GIVING — bank account details screen
+   (logo header, one row per currency with a copy
+   button, shared SWIFT/sort code row, note).
+   Loaded by DCC_Information_Hub_V1.html.
+========================================= */
+
+.gv {
+    display: grid;
+    gap: 12px;
+}
+
+/* ---- Bank header ---- */
+.gv-head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 2px 0 6px;
+}
+
+.gv-logo {
+    flex: 0 0 auto;
+    width: 56px;
+    height: 56px;
+    display: grid;
+    place-items: center;
+    padding: 7px;
+    box-sizing: border-box;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 6px 18px rgba(0,0,0,.25);
+    overflow: hidden;
+}
+
+.gv-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.gv-logo--full {
+    padding: 0;
+}
+
+.gv-divider {
+    flex: 0 0 auto;
+    width: 1px;
+    height: 36px;
+    background: rgba(255,255,255,.22);
+}
+
+.gv-name {
+    color: #fff;
+    font-size: 21px;
+    font-weight: 750;
+    line-height: 1.2;
+    letter-spacing: -.01em;
+}
+
+/* ---- Account rows ---- */
+.gv-list {
+    display: grid;
+    gap: 10px;
+}
+
+.gv-acct {
+    display: grid;
+    grid-template-columns: 84px minmax(0, 1fr) auto;
+    align-items: stretch;
+    min-height: 72px;
+    overflow: hidden;
+    border: 1px solid rgba(169,140,255,.28);
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(118,103,217,.10), rgba(255,255,255,.025));
+}
+
+.gv-cur {
+    display: grid;
+    place-items: center;
+    background: rgba(118,103,217,.24);
+    border-right: 1px solid rgba(169,140,255,.22);
+    color: #fff;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: .03em;
+}
+
+.gv-info {
+    display: grid;
+    align-content: center;
+    gap: 3px;
+    padding: 12px 16px;
+    color: #dfe2f0;
+    font-size: 14px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+.gv-info strong {
+    color: #fff;
+    font-weight: 700;
+}
+
+.gv-number {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .02em;
+}
+
+.gv-copy {
+    align-self: center;
+    width: 44px;
+    height: 44px;
+    margin-right: 12px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid rgba(169,140,255,.3);
+    border-radius: 12px;
+    background: rgba(118,103,217,.12);
+    color: #c5b8ff;
+    cursor: pointer;
+    transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+
+.gv-copy:hover,
+.gv-copy:focus-visible {
+    background: rgba(118,103,217,.26);
+    border-color: rgba(169,140,255,.6);
+    color: #fff;
+    outline: none;
+}
+
+.gv-copy:focus-visible {
+    box-shadow: 0 0 0 3px rgba(118,103,217,.35);
+}
+
+.gv-copy svg {
+    width: 20px;
+    height: 20px;
+}
+
+.gv-copy .gv-icon-done,
+.gv-copy.is-copied .gv-icon-copy {
+    display: none;
+}
+
+.gv-copy.is-copied .gv-icon-done {
+    display: block;
+}
+
+.gv-copy.is-copied {
+    color: #7ee2a8;
+    border-color: rgba(126,226,168,.55);
+    background: rgba(126,226,168,.10);
+}
+
+/* ---- Shared SWIFT/BIC + sort code ---- */
+.gv-codes {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border: 1px solid rgba(169,140,255,.5);
+    border-radius: 14px;
+    background: rgba(118,103,217,.08);
+    color: #dfe2f0;
+    font-size: 14px;
+}
+
+.gv-codes-text {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+}
+
+.gv-codes strong {
+    color: #fff;
+}
+
+.gv-sep {
+    width: 1px;
+    height: 18px;
+    background: rgba(255,255,255,.25);
+}
+
+/* ---- Note ---- */
+.gv-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 13px 16px;
+    border-radius: 14px;
+    background: rgba(118,103,217,.10);
+    color: #cfd3e6;
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+.gv-note p {
+    margin: 0;
+}
+
+.gv-info-icon {
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    color: #a99eff;
+}
+
+.gv .link-row {
+    margin-top: 2px;
+}
+
+.gv-live {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+/* ---- Phones ---- */
+@media (max-width: 600px) {
+    .gv-head {
+        gap: 12px;
+    }
+    .gv-logo {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        padding: 6px;
+    }
+    .gv-logo--full {
+        padding: 0;
+    }
+    .gv-divider {
+        height: 30px;
+    }
+    .gv-name {
+        font-size: 18px;
+    }
+    /* Copy button sits beside the account number, so the account
+       name gets the full width of the row */
+    .gv-acct {
+        position: relative;
+        grid-template-columns: 58px minmax(0, 1fr);
+        min-height: 68px;
+    }
+    .gv-cur {
+        font-size: 15px;
+    }
+    .gv-info {
+        padding: 10px 12px;
+        font-size: 13px;
+        gap: 2px;
+    }
+    .gv-info strong {
+        display: block;
+        color: #b9b2e8;
+        font-size: 11px;
+        font-weight: 650;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+    .gv-info > div {
+        margin-bottom: 3px;
+    }
+    .gv-number {
+        font-size: 15px;
+        font-weight: 650;
+        color: #fff;
+    }
+    .gv-copy {
+        position: absolute;
+        right: 10px;
+        bottom: 9px;
+        width: 40px;
+        height: 40px;
+        margin: 0;
+    }
+    .gv-info {
+        padding-right: 12px;
+    }
+    .gv-info > div:nth-child(2) {
+        padding-right: 50px;
+        min-height: 40px;
+    }
+    .gv-codes,
+    .gv-note {
+        padding: 12px 13px;
+        font-size: 13px;
+    }
+    .gv-sep {
+        display: none;
+    }
+    .gv-codes-text {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+}

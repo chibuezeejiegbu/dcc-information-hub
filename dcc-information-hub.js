@@ -568,23 +568,57 @@ function givingBankDetails(bankName) {
     return;
   }
 
-  let html = `<strong>${escapeHtml(bankName)}</strong>`;
+  const brand = givingBrand(bankName);
+  const displayName = brand ? brand.name : bankName;
 
+  // Account details all accounts share (e.g. one SWIFT/BIC and sort code
+  // for every foreign-currency account) are shown once, under the list.
+  const swiftCodes = [...new Set(accounts.map(a => a.swift_bic).filter(Boolean))];
+  const sortCodes = [...new Set(accounts.map(a => a.sort_code).filter(Boolean))];
+  const sharedSwift = swiftCodes.length === 1 ? swiftCodes[0] : '';
+  const sharedSort = sortCodes.length === 1 ? sortCodes[0] : '';
+
+  let html = '<div class="gv">';
+
+  html += '<div class="gv-head">';
+  if (brand) {
+    html +=
+      `<span class="gv-logo${brand.fullTile ? ' gv-logo--full' : ''}">` +
+      `<img src="assets/giving/${brand.logo}" alt="" width="56" height="56"></span>` +
+      '<span class="gv-divider" aria-hidden="true"></span>';
+  }
+  html += `<span class="gv-name">${escapeHtml(displayName)}</span></div>`;
+
+  html += '<div class="gv-list">';
   for (const account of accounts) {
-    html += '<div class="md-result">';
-    html += `<strong>${escapeHtml(account.currency)}</strong><br>`;
-    html += `<strong>Account Name:</strong> ${escapeHtml(account.account_name)}<br>`;
-    html += `<strong>Account Number:</strong> ${escapeHtml(account.account_number)}`;
-
-    if (account.swift_bic) {
-      html += `<br><strong>SWIFT/BIC:</strong> ${escapeHtml(account.swift_bic)}`;
+    const currency = String(account.currency).toUpperCase();
+    const number = String(account.account_number);
+    html += '<div class="gv-acct">';
+    html += `<span class="gv-cur">${escapeHtml(currency)}</span>`;
+    html += '<div class="gv-info">';
+    html += `<div><strong>Account Name:</strong> ${escapeHtml(account.account_name)}</div>`;
+    html += `<div><strong>Account Number:</strong> <span class="gv-number">${escapeHtml(number)}</span></div>`;
+    if (account.swift_bic && !sharedSwift) {
+      html += `<div><strong>SWIFT/BIC:</strong> ${escapeHtml(account.swift_bic)}</div>`;
     }
-
-    if (account.sort_code) {
-      html += `<br><strong>Sort Code:</strong> ${escapeHtml(account.sort_code)}`;
+    if (account.sort_code && !sharedSort) {
+      html += `<div><strong>Sort Code:</strong> ${escapeHtml(account.sort_code)}</div>`;
     }
-
     html += '</div>';
+    html +=
+      `<button type="button" class="gv-copy" data-copy="${escapeHtml(number)}" ` +
+      `aria-label="Copy ${escapeHtml(currency)} account number ${escapeHtml(number)}" ` +
+      `title="Copy account number">${GIVING_ICON_COPY}</button>`;
+    html += '</div>';
+  }
+  html += '</div>';
+
+  if (sharedSwift || sharedSort) {
+    html += `<div class="gv-codes">${GIVING_ICON_INFO}<div class="gv-codes-text">`;
+    if (sharedSwift) html += `<span><strong>SWIFT/BIC:</strong> ${escapeHtml(sharedSwift)}</span>`;
+    if (sharedSwift && sharedSort) html += '<span class="gv-sep" aria-hidden="true"></span>';
+    if (sharedSort) html += `<span><strong>Sort Code:</strong> ${escapeHtml(sharedSort)}</span>`;
+    html += '</div></div>';
   }
 
   // The currency reminder only matters when this bank lists more than
@@ -594,12 +628,12 @@ function givingBankDetails(bankName) {
   );
 
   html +=
-    '<div class="notice">' +
+    `<div class="gv-note">${GIVING_ICON_INFO}<p>` +
     (hasForeignCurrency
       ? 'Please use the account details for the currency you wish to give in. '
       : '') +
     'Verify the details on the official DCC giving page before making a transfer.' +
-    '</div>';
+    '</p></div>';
 
   html +=
     `<div class="link-row">${link(
@@ -607,8 +641,75 @@ function givingBankDetails(bankName) {
       'https://www.davidschristiancentre.org/give'
     )}</div>`;
 
+  html += '<span class="gv-live" aria-live="polite"></span>';
+  html += '</div>';
+
   addBot(html);
+
+  const blocks = els.chat.querySelectorAll('.gv');
+  const block = blocks[blocks.length - 1];
+  if (block) {
+    block.querySelectorAll('.gv-copy').forEach(button => {
+      button.addEventListener('click', () => copyAccountNumber(button, block));
+    });
+  }
+
   addUtilityButtons();
+}
+
+// Bank logos (assets/giving) and display names, matched on the bank name
+// stored in the database. A bank not listed here shows its name only.
+const GIVING_BRANDS = [
+  { match: /\bgt|guaranty/i, logo: 'gtco.webp', name: 'GTBank', fullTile: true },
+  { match: /\buba\b|united bank/i, logo: 'uba.webp', name: 'United Bank for Africa' },
+  { match: /fidelity/i, logo: 'fidelity.webp', name: 'Fidelity Bank' },
+  { match: /vfd/i, logo: 'vfd.webp', name: 'VFD Microfinance Bank' }
+];
+
+function givingBrand(bankName) {
+  return GIVING_BRANDS.find(brand => brand.match.test(String(bankName))) || null;
+}
+
+const GIVING_ICON_COPY =
+  '<svg class="gv-icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2.4"/><path d="M15.5 8.5V6.4A2.4 2.4 0 0 0 13.1 4H6.4A2.4 2.4 0 0 0 4 6.4v6.7a2.4 2.4 0 0 0 2.4 2.4h2.1"/></svg>' +
+  '<svg class="gv-icon-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+
+const GIVING_ICON_INFO =
+  '<svg class="gv-info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M12 11v5.5"/><circle cx="12" cy="7.6" r=".6" fill="currentColor"/></svg>';
+
+async function copyAccountNumber(button, block) {
+  const number = button.dataset.copy || '';
+  let copied = false;
+
+  try {
+    await navigator.clipboard.writeText(number);
+    copied = true;
+  } catch (error) {
+    // Older browsers / non-secure pages: fall back to a temporary text box.
+    const box = document.createElement('textarea');
+    box.value = number;
+    box.setAttribute('readonly', '');
+    box.style.position = 'fixed';
+    box.style.opacity = '0';
+    document.body.appendChild(box);
+    box.select();
+    try { copied = document.execCommand('copy'); } catch (e) { copied = false; }
+    box.remove();
+  }
+
+  const live = block.querySelector('.gv-live');
+  if (copied) {
+    button.classList.add('is-copied');
+    button.setAttribute('title', 'Copied');
+    if (live) live.textContent = `Account number ${number} copied.`;
+    clearTimeout(button._copyTimer);
+    button._copyTimer = setTimeout(() => {
+      button.classList.remove('is-copied');
+      button.setAttribute('title', 'Copy account number');
+    }, 1800);
+  } else if (live) {
+    live.textContent = 'Could not copy. Please copy the number manually.';
+  }
 }
 
   let peopleRosterCache = null;
