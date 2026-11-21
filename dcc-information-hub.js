@@ -896,7 +896,14 @@ async function workforceDepartmentDetails(branch, departmentName) {
       const roster = people
         .filter(person => String(person.roster_status || '').toLowerCase() === 'current' &&
           String(person.ministerial_title || '').toLowerCase() === expectedTitle)
-        .sort((a, b) => String(a.display_name || '').localeCompare(String(b.display_name || '')));
+        // Rank order from the church office (people.roster_order); anyone
+        // without a number is listed after, alphabetically.
+        .sort((a, b) => {
+          const orderA = Number.isFinite(Number(a.roster_order)) && a.roster_order !== null ? Number(a.roster_order) : Number.MAX_SAFE_INTEGER;
+          const orderB = Number.isFinite(Number(b.roster_order)) && b.roster_order !== null ? Number(b.roster_order) : Number.MAX_SAFE_INTEGER;
+          if (orderA !== orderB) return orderA - orderB;
+          return String(a.display_name || '').localeCompare(String(b.display_name || ''));
+        });
 
       if (!roster.length) {
         addBot(`No ${escapeHtml(title.toLowerCase())} are currently listed.`);
