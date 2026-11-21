@@ -361,6 +361,49 @@ state.currentContext = null;
     };
   }
 
+  // ---- Church Information screens (branch details, About DCC) ----
+  const CI_ICONS = {
+    pin: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 6.1 11.3 6.4 11.6a.85.85 0 0 0 1.2 0C12.9 20.8 19 14.6 19 9.5a7 7 0 0 0-7-7Zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2Z"/></svg>',
+    phone: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 3.2c.5-.5 1.3-.5 1.8 0l2.2 2.3c.5.5.5 1.2.1 1.7L9.4 8.8a12 12 0 0 0 5.8 5.8l1.6-1.3c.5-.4 1.3-.4 1.7.1l2.3 2.2c.5.5.5 1.3 0 1.8l-1.5 1.5c-.9.9-2.2 1.2-3.4.8A18.6 18.6 0 0 1 4.3 8.1c-.4-1.2-.1-2.5.8-3.4l1.5-1.5Z"/></svg>',
+    calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.6"/><path d="M8 3v4M16 3v4M3.5 10h17"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 17.4h.01M12 17.4h.01"/></svg>',
+    megaphone: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.5 4.2v13.6a.8.8 0 0 1-1.2.7l-4.6-2.9H8.2l.9 4a1 1 0 0 1-1 1.2H6.6a1 1 0 0 1-1-.8l-1-4.4A3.6 3.6 0 0 1 5.4 8h7.3l4.6-2.9a.8.8 0 0 1 1.2.7ZM20.2 9.2a.75.75 0 0 1 1.05 0 3.8 3.8 0 0 1 0 5.3.75.75 0 1 1-1.05-1.06 2.3 2.3 0 0 0 0-3.2.75.75 0 0 1 0-1.04Z"/></svg>',
+    info: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19Zm1.2 14.3a1.2 1.2 0 0 1-2.4 0v-5.3a1.2 1.2 0 0 1 2.4 0v5.3ZM12 9a1.4 1.4 0 1 1 0-2.8A1.4 1.4 0 0 1 12 9Z"/></svg>',
+    people: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="7.3" r="3.1"/><circle cx="5.6" cy="9" r="2.3"/><circle cx="18.4" cy="9" r="2.3"/><path d="M12 11.6c3.1 0 5.6 2.1 5.6 4.7v1.3c0 .6-.5 1-1 1H7.4c-.5 0-1-.4-1-1v-1.3c0-2.6 2.5-4.7 5.6-4.7ZM5.2 12.6c.4 0 .7 0 1 .1a6 6 0 0 0-1.3 3.6v1.3H2.3c-.4 0-.8-.3-.8-.8v-.9c0-1.8 1.6-3.3 3.7-3.3ZM18.8 12.6c2.1 0 3.7 1.5 3.7 3.3v.9c0 .5-.4.8-.8.8h-2.6v-1.3a6 6 0 0 0-1.3-3.6c.3-.1.6-.1 1-.1Z"/></svg>',
+    book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.2C10 4.8 7.3 4.4 4 4.8v13.4c3.3-.4 6 0 8 1.4 2-1.4 4.7-1.8 8-1.4V4.8c-3.3-.4-6 0-8 1.4Z"/><path d="M12 6.2v13.4"/></svg>',
+    sprout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21v-8.5"/><path d="M12 12.5C12 8 8.8 5.5 4.5 5.5c0 4.3 3 7 7.5 7Z"/><path d="M12 12.5c0-4.5 3.2-7 7.5-7 0 4.3-3 7-7.5 7Z"/></svg>',
+    arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>'
+  };
+
+  function ciCard(icon, title, bodyHtml, extraClass = '') {
+    return `<section class="ci-card${extraClass ? ' ' + extraClass : ''}">` +
+      `<span class="ci-icon">${CI_ICONS[icon]}</span>` +
+      `<div class="ci-body"><h3 class="ci-label">${escapeHtml(title)}</h3>${bodyHtml}</div></section>`;
+  }
+
+  function ciHeader(icon, title) {
+    return `<div class="ci-head"><span class="ci-head-icon">${CI_ICONS[icon]}</span>` +
+      `<h2 class="ci-title">${escapeHtml(title)}</h2></div>`;
+  }
+
+  function directionsLink(address, label) {
+    const url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address);
+    return `<a class="ci-action" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">` +
+      `${escapeHtml(label)}${CI_ICONS.arrow}</a>`;
+  }
+
+  function telHref(phone) {
+    return 'tel:' + String(phone).replace(/[^\d+]/g, '');
+  }
+
+  // Times always shown as "7:00 AM" (never "7 AM") so lists read evenly.
+  function formatClockTime(value) {
+    if (!value) return '';
+    const [hour, minute] = String(value).split(':').map(Number);
+    if (!Number.isFinite(hour)) return String(value);
+    const period = hour >= 12 ? 'PM' : 'AM';
+    return `${hour % 12 || 12}:${String(minute || 0).padStart(2, '0')} ${period}`;
+  }
+
   function branchDetails(which) {
   const centre = findCentre(which);
 
@@ -370,69 +413,60 @@ state.currentContext = null;
     return;
   }
 
-  let html = `<strong>${escapeHtml(centre.name)}</strong>`;
-
   const address = centreAddressInfo(centre);
+  let html = '<div class="ci">' + ciHeader('pin', centre.name);
 
   if (address.main) {
-    html += `<div class="md-result"><strong>Address:</strong><br>${escapeHtml(address.main)}</div>`;
+    html += ciCard('pin', 'Address',
+      `<p>${escapeHtml(address.main)}</p>` + directionsLink(address.main, 'Get directions'));
   }
 
   if (address.upcoming) {
     const when = address.from ? formatLongDate(address.from) : '';
-    html +=
-      '<div class="md-result centre-moving"><strong>Moving soon</strong><br>' +
-      (when
-        ? `From ${escapeHtml(when)}, this centre moves to its new location:<br>`
-        : 'This centre will soon move to its new location:<br>') +
-      `${escapeHtml(address.upcoming)}</div>`;
+    html += ciCard('megaphone', 'Moving soon',
+      `<p>${when ? `From ${escapeHtml(when)}, this centre moves to its new location:` : 'This centre will soon move to its new location:'}</p>` +
+      `<p class="ci-strong">${escapeHtml(address.upcoming)}</p>` +
+      directionsLink(address.upcoming, 'Directions to the new site'),
+      'ci-card--notice');
   }
 
   if (Array.isArray(centre.phones) && centre.phones.length) {
-    html += `<div class="md-result"><strong>Phone:</strong> ${centre.phones.map(escapeHtml).join(' / ')}</div>`;
+    html += ciCard('phone', 'Phone',
+      '<ul class="ci-phones">' +
+      centre.phones.map(phone =>
+        `<li><a href="${escapeHtml(telHref(phone))}" aria-label="Call ${escapeHtml(phone)}">${escapeHtml(phone)}</a></li>`
+      ).join('') +
+      '</ul>');
   }
 
   if (Array.isArray(centre.services) && centre.services.length) {
-    html += `<div class="md-result"><strong>Service Times</strong><br>`;
-
-    centre.services.forEach(service => {
-      const formatServiceTime = (timeValue) => {
-  if (!timeValue) return '';
-
-  const [hour, minute] = timeValue.split(':').map(Number);
-  const period = hour >= 12 ? 'PM' : 'AM';
-  const displayHour = hour % 12 || 12;
-
-  return minute === 0
-    ? `${displayHour} ${period}`
-    : `${displayHour}:${String(minute).padStart(2, '0')} ${period}`;
-};
-
-let time = formatServiceTime(service.start_time);
-
-if (service.end_time) {
-  time += ` – ${formatServiceTime(service.end_time)}`;
-}
-
-      html += `${escapeHtml(service.day)} — ${escapeHtml(service.label)}: ${escapeHtml(time)}<br>`;
-    });
-
-    html += `</div>`;
+    html += ciCard('calendar', 'Service Times',
+      '<ul class="ci-times">' +
+      centre.services.map(service => {
+        let time = formatClockTime(service.start_time);
+        if (service.end_time) time += ` – ${formatClockTime(service.end_time)}`;
+        return `<li><span class="ci-day">${escapeHtml(service.day)}</span> ` +
+          `<span class="ci-service">${escapeHtml(service.label)}</span> ` +
+          `<span class="ci-time">${escapeHtml(time)}</span></li>`;
+      }).join('') +
+      '</ul>');
   }
 
+  html += '</div>';
   addBot(html);
   addUtilityButtons();
 }
 
   function aboutDcc() {
     const html =
-      `<div class="md-result">` +
-      `Welcome to David’s Christian Centre, which we fondly call DCC. We are the home of victorious people, and we are deeply committed to raising a victorious community by schooling and training everyone through the Word of Faith into a life of 100% victory, 100% of the time.` +
-      `<br><br>` +
-      `We get our name from a simple yet powerful scripture, <strong>(1 Chronicles 18:6b)</strong>: just as David never lost a battle, God's walk with us will be the exact same. Everything we do is built around raising victorious people through the Word of Faith and on taking Bible-based principles and actually living them out day by day in our everyday lives.` +
-      `<br><br>` +
-      `Our ministry began in a parlor in 1996, when one man chose to heed God's call to serve. In September 2026, we celebrated our 30th anniversary. We are so glad you are here to learn more about who we are.` +
-      `</div>`;
+      '<div class="ci">' + ciHeader('info', 'About DCC') +
+      ciCard('people', 'Who We Are',
+        `<p>Welcome to David’s Christian Centre, which we fondly call DCC. We are the home of victorious people, and we are deeply committed to raising a victorious community by schooling and training everyone through the Word of Faith into a life of 100% victory, 100% of the time.</p>`) +
+      ciCard('book', 'Our Foundation',
+        `<p>We get our name from a simple yet powerful scripture, <strong>(1 Chronicles 18:6b)</strong>: just as David never lost a battle, God's walk with us will be the exact same. Everything we do is built around raising victorious people through the Word of Faith and on taking Bible-based principles and actually living them out day by day in our everyday lives.</p>`) +
+      ciCard('sprout', 'Our Journey',
+        `<p>Our ministry began in a parlor in 1996, when one man chose to heed God's call to serve. In September 2026, we celebrated our 30th anniversary. We are so glad you are here to learn more about who we are.</p>`) +
+      '</div>';
     addBot(html);
     addUtilityButtons();
   }
