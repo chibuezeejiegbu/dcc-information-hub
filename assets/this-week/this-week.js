@@ -317,8 +317,17 @@
       img.alt = page.alt || `Page ${current + 1}`;
       img.classList.toggle('tw-trim', page.trimEdges === true);
       count.textContent = `${current + 1} / ${pages.length}`;
-      el.querySelector('.tw-mprev').disabled = current === 0;
-      el.querySelector('.tw-mnext').disabled = current === pages.length - 1;
+      const prevBtn = el.querySelector('.tw-mprev');
+      const nextBtn = el.querySelector('.tw-mnext');
+      const hadFocus = document.activeElement;
+      prevBtn.disabled = current === 0;
+      nextBtn.disabled = current === pages.length - 1;
+      // A button that just became disabled loses keyboard focus; keep focus
+      // inside the pop-up so arrow keys and Esc keep working.
+      if (hadFocus && hadFocus.disabled) {
+        const other = hadFocus === nextBtn ? prevBtn : nextBtn;
+        (other.disabled ? closeBtn : other).focus();
+      }
       [current - 1, current + 1].forEach(n => {
         if (pages[n]) { const pre = new Image(); pre.src = BASE + pages[n].image; }
       });
@@ -329,7 +338,10 @@
     el.querySelector('.tw-mprev').addEventListener('click', () => go(current - 1));
     el.querySelector('.tw-mnext').addEventListener('click', () => go(current + 1));
 
-    el.addEventListener('keydown', event => {
+    // Listen on the whole page while the pop-up is open, so the keys work
+    // even if focus has slipped outside it.
+    document.addEventListener('keydown', event => {
+      if (el.hidden) return;
       if (event.key === 'Escape') { event.preventDefault(); closeModal(); }
       else if (event.key === 'ArrowLeft') { event.preventDefault(); go(current - 1); }
       else if (event.key === 'ArrowRight') { event.preventDefault(); go(current + 1); }

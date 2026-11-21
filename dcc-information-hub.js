@@ -308,24 +308,61 @@ state.currentContext = null;
 
   function churchMenu() {
     addBot('<strong>Church Information & Services</strong><br>What would you like to find out?');
+    const mainland = findCentre('mainland');
+    const island = findCentre('island');
     addMenu([
-      {label:'Mainland — Victory Dome', action:() => branchDetails('Mainland — Victory Dome')},
-      {label:'Island — DCC Lekki', action:() => branchDetails('Island — DCC Lekki')},
+      {label: (mainland && mainland.menu_label) || 'Mainland — Victory Dome', action:() => branchDetails('Mainland')},
+      {label: (island && island.menu_label) || 'Island — DCC Lekki', action:() => branchDetails('Island')},
       {label:'About DCC', action:() => aboutDcc()}
     ]);
     addUtilityButtons();
   }
 
+  // Find a worship centre by its permanent record_id (so renaming a centre,
+  // e.g. after the Mainland move, never breaks the chatbot), falling back to
+  // the older name / alias match.
+  const CENTRE_IDS = {
+    mainland: 'centre_mainland_victory_dome',
+    island: 'centre_island_dcc_lekki'
+  };
+
+  function findCentre(branch) {
+    const centres = Array.isArray(state.worshipCentres) ? state.worshipCentres : [];
+    const key = String(branch).toLowerCase().includes('mainland') ? 'mainland' : 'island';
+    return centres.find(c => c.record_id === CENTRE_IDS[key]) ||
+      centres.find(c => (c.aliases || []).some(a => String(a).toLowerCase() === key)) ||
+      centres.find(c => String(c.name || '').toLowerCase().includes(key)) ||
+      null;
+  }
+
+  function localTodayISO() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  function formatLongDate(iso) {
+    const d = new Date(`${iso}T00:00:00`);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  // Address shown for a centre. A planned move is stored as upcoming_address
+  // (+ optional upcoming_address_effective_from, YYYY-MM-DD). Before that
+  // date the current address is main and the new one is shown as "moving
+  // soon"; from that date the new address is main and the old one is hidden.
+  function centreAddressInfo(centre) {
+    const upcoming = String(centre.upcoming_address || '').trim();
+    const from = String(centre.upcoming_address_effective_from || '').trim();
+    const moved = Boolean(upcoming && from && localTodayISO() >= from);
+    return {
+      main: moved ? upcoming : centre.address,
+      upcoming: moved ? '' : upcoming,
+      from: moved ? '' : from
+    };
+  }
+
   function branchDetails(which) {
-  const isMainland = which.includes('Mainland');
-
-  const centre = state.worshipCentres.find(c => {
-    if (isMainland) {
-      return c.name === 'DCC Mainland (Victory Dome)';
-    }
-
-    return c.name === 'DCC Island (DCC Lekki)';
-  });
+  const centre = findCentre(which);
 
   if (!centre) {
     addBot('<strong>Branch information unavailable.</strong><br>I could not find this worship centre in the DCC Information Hub database.');
@@ -335,8 +372,20 @@ state.currentContext = null;
 
   let html = `<strong>${escapeHtml(centre.name)}</strong>`;
 
-  if (centre.address) {
-    html += `<div class="md-result"><strong>Address:</strong><br>${escapeHtml(centre.address)}</div>`;
+  const address = centreAddressInfo(centre);
+
+  if (address.main) {
+    html += `<div class="md-result"><strong>Address:</strong><br>${escapeHtml(address.main)}</div>`;
+  }
+
+  if (address.upcoming) {
+    const when = address.from ? formatLongDate(address.from) : '';
+    html +=
+      '<div class="md-result centre-moving"><strong>Moving soon</strong><br>' +
+      (when
+        ? `From ${escapeHtml(when)}, this centre moves to its new location:<br>`
+        : 'This centre will soon move to its new location:<br>') +
+      `${escapeHtml(address.upcoming)}</div>`;
   }
 
   if (Array.isArray(centre.phones) && centre.phones.length) {
@@ -1047,7 +1096,7 @@ async function workforceDepartmentDetails(branch, departmentName) {
   ];
 
   return branchDefinitions.map(branch => {
-    const centre = centres.find(item => item.name === branch.centreName);
+    const centre = findCentre(branch.label);
     if (!centre || !Array.isArray(centre.services)) {
       return { label: branch.label, times: 'Service times unavailable' };
     }
