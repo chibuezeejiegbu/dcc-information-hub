@@ -1,9 +1,11 @@
 /* What's On at DCC — micro-card slider + carousel pop-up
  * (files keep their original 'this-week' names; the visible name comes from
  * "name" and "coverTitle" in this-week.json).
- * Reads assets/this-week/this-week.json.
- * If the file can't be loaded, the original DCC This Week card stays
- * exactly as it was (linking to Canva), so nothing breaks.
+ * Reads assets/this-week/this-week.json: one entry per event (its poster,
+ * title, date line and end date). The pop-up is built automatically:
+ * first page (cover), then each current event's poster, then last page.
+ * Events disappear from cards and pop-up the day after their endDate.
+ * If the file can't be loaded, the original card stays as it was.
  * Exposes window.DCCThisWeek.open(page) for the chatbot.
  */
 (() => {
@@ -20,7 +22,7 @@
 
   const DEFAULT_NAME = 'What’s On at DCC';
   const api = {
-    available: () => Boolean(data && Array.isArray(data.carousel) && data.carousel.length),
+    available: () => Boolean(data && Array.isArray(data.pages) && data.pages.length),
     name: () => (data && data.name) || DEFAULT_NAME,
     open: (page = 1) => openModal(page)
   };
@@ -53,11 +55,21 @@
   /* ---------------- Slider ---------------- */
 
   function init(json) {
-    data = json;
     const today = todayISO();
-    const cards = (json.cards || []).filter(card =>
-      card && card.title && card.image && (!card.endDate || card.endDate >= today)
+    const events = (json.events || []).filter(event =>
+      event && event.title && event.poster && (!event.endDate || event.endDate >= today)
     );
+
+    // Pop-up pages: cover, current event posters, closing page.
+    const pages = [];
+    if (json.firstPage && json.firstPage.image) pages.push(json.firstPage);
+    const firstPosterPage = pages.length + 1;
+    events.forEach(event => pages.push({
+      image: event.poster,
+      alt: event.alt || [event.title, event.when].filter(Boolean).join('. ')
+    }));
+    if (json.lastPage && json.lastPage.image) pages.push(json.lastPage);
+    data = { ...json, pages };
 
     if (json.coverImage) {
       original.style.backgroundImage = `url("${BASE}${json.coverImage}")`;
@@ -91,7 +103,7 @@
       if (swiped) { event.preventDefault(); return; }
       if (api.available()) {
         event.preventDefault();
-        openModal(json.coverPage || 1);
+        openModal(1);
       }
     });
     track.appendChild(makeSlide(original));
@@ -99,14 +111,17 @@
     const logo = document.querySelector('.brand img');
     const logoSrc = logo ? logo.getAttribute('src') : '';
 
-    cards.forEach(card => {
+    events.forEach((card, i) => {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'tw-card';
       button.setAttribute('aria-label', `${card.title}. ${card.when || ''}. View details`);
       button.innerHTML =
-        `<img class="tw-card-bg" src="${escapeHtml(BASE + card.image)}" alt="" decoding="async">` +
+        // The church poster twice: blurred and darkened to fill the card,
+        // and whole (any shape) on the right.
+        `<img class="tw-card-bg" src="${escapeHtml(BASE + card.poster)}" alt="" decoding="async">` +
         '<span class="tw-card-shade"></span>' +
+        `<img class="tw-card-poster" src="${escapeHtml(BASE + card.poster)}" alt="" decoding="async">` +
         (logoSrc
           ? `<span class="tw-brand" aria-hidden="true"><img src="${escapeHtml(logoSrc)}" alt=""><span><b>DAVID'S CHRISTIAN CENTRE</b><small>INFORMATION HUB</small></span></span>`
           : '') +
@@ -118,7 +133,7 @@
         '</span>';
       button.addEventListener('click', () => {
         if (swiped) return;
-        openModal(card.page || 1);
+        openModal(firstPosterPage + i);
       });
       track.appendChild(makeSlide(button));
     });
@@ -269,7 +284,7 @@
   }
 
   function buildModal() {
-    const pages = data.carousel;
+    const pages = data.pages;
     const el = document.createElement('div');
     el.className = 'tw-modal';
     el.hidden = true;
@@ -300,6 +315,7 @@
       const page = pages[current];
       img.src = BASE + page.image;
       img.alt = page.alt || `Page ${current + 1}`;
+      img.classList.toggle('tw-trim', page.trimEdges === true);
       count.textContent = `${current + 1} / ${pages.length}`;
       el.querySelector('.tw-mprev').disabled = current === 0;
       el.querySelector('.tw-mnext').disabled = current === pages.length - 1;
