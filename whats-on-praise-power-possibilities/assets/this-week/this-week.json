@@ -1,0 +1,69 @@
+{
+  "_howTo": "One entry in 'events' per event, in the order you want them shown. Put the church's poster in the posters/ folder and write its file name in 'poster'. 'tag' (branch or audience), 'title' and 'when' are the words shown on the small homepage card. 'endDate' (YYYY-MM-DD) is the last day of the event: from the next day it disappears from the cards and the pop-up by itself. 'alt' is optional: a short description of the poster for people using screen readers.",
+  "name": "What’s On at DCC",
+  "coverTitle": [
+    "What’s On",
+    "at DCC"
+  ],
+  "coverImage": "whats-on-cover.webp",
+  "firstPage": {
+    "image": "pages/cover.webp",
+    "alt": "What’s On at DCC",
+    "trimEdges": true
+  },
+  "lastPage": {
+    "image": "pages/stay-in-the-know.webp",
+    "alt": "Stay in the know. Save this and share it with someone who needs it.",
+    "trimEdges": true
+  },
+  "events": [
+    {
+      "tag": "Mainland",
+      "title": "End of Year Praise & Planning Conference",
+      "when": "Saturday 21 November",
+      "poster": "posters/2026-11-praise-planning-conference.webp",
+      "endDate": "2026-11-21",
+      "alt": "DCC Business Fellowship End of Year Praise and Planning Conference 2026, Saturday 21 November 2026."
+    },
+    {
+      "tag": "Mainland & Island",
+      "title": "Plans, Purposes and Pursuits",
+      "when": "Sermon series · Sundays in November",
+      "poster": "posters/2026-11-plans-purposes-pursuits.webp",
+      "endDate": "2026-11-29",
+      "alt": "Plans, Purposes and Pursuits: all Sundays in November."
+    },
+    {
+      "tag": "Mainland · For workers",
+      "title": "SHAPEN for Service",
+      "when": "Sundays in November · 6:25 AM",
+      "poster": "posters/2026-11-shapen.webp",
+      "endDate": "2026-11-29",
+      "alt": "Mainland Workers' Meeting. Theme: SHAPEN for Service, discovering your God-given design for Kingdom impact. All Sundays in November, 6:25 AM, Victory Dome."
+    },
+    {
+      "tag": "Mainland",
+      "title": "Praise Power & Possibilities",
+      "when": "Friday 27 November · 6:30 PM",
+      "poster": "posters/2026-11-praise-power-possibilities.webp",
+      "endDate": "2026-11-27",
+      "alt": "Praise, Power and Possibilities with Frank Eloho. Friday 27 November 2026, 6:30 PM. David's Christian Centre, Victory Dome, behind PHCN office, Fatgbems bus stop, Amuwo-Odofin, Lagos."
+    },
+    {
+      "tag": "Mainland",
+      "title": "Special Meeting for Expectant Mothers",
+      "when": "Saturday 28 November · 9:00 AM",
+      "poster": "posters/2026-11-expectant-mothers.webp",
+      "endDate": "2026-11-28",
+      "alt": "Special Meeting for Expectant Mothers: a time of fellowship, encouragement and spiritual support for mothers-to-be. Saturday 28 November 2026, 9:00 AM, David's Christian Centre, Victory Dome."
+    },
+    {
+      "tag": "Mainland",
+      "title": "Gaining Momentum Conference 2027",
+      "when": "4–10 January 2027",
+      "poster": "posters/2027-01-gaining-momentum-conference.webp",
+      "endDate": "2027-01-10",
+      "alt": "Gaining Momentum Conference 2027, 4 to 10 January 2027. Monday to Friday 6:00 PM daily, Sunday 8:00 AM. Speakers: Archbishop Wale Oke, Bishop Fred Addo, Rev. Samson Ajetomobi, Pastor Simeon Afolabi and Rev. Albert Femi Oduwole. Music minister: Moses Akoh. Hosts: Pastor Mildred Kingsley-Okonkwo and Pastor Kingsley Okonkwo. Mainland Centre: David's Christian Centre, beside Anchorage Estate, Ago Palace Way, Amuwo-Odofin, Lagos. Enquiries: 08077714411, 09022110911."
+    }
+  ]
+}
